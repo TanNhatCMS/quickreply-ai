@@ -279,8 +279,8 @@ export default function ChatWidget() {
           </div>
 
           {/* Input bar */}
-          <form onSubmit={handleSend} className="chat-input-bar">
-            <div className="chat-input-container">
+          <form onSubmit={handleSend} className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest">
+            <div className="flex items-center gap-2 bg-surface-container-low rounded-full px-4 py-2 border border-outline-variant/30 focus-within:border-primary transition-colors">
               <input
                 ref={inputRef}
                 id="chat-input"
@@ -288,14 +288,14 @@ export default function ChatWidget() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Nhập tin nhắn..."
-                className="chat-input"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-on-surface p-0 placeholder:text-outline outline-none"
                 disabled={isLoading}
                 autoComplete="off"
               />
               <button
                 type="submit"
                 disabled={isLoading || !inputValue.trim()}
-                className="chat-send-btn"
+                className="text-primary hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-transparent border-none"
                 aria-label="Gửi"
               >
                 {isLoading ? (
