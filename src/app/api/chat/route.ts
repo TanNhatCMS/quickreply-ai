@@ -1,4 +1,3 @@
-import { createMCPClient } from '@ai-sdk/mcp'
 import { createOpenAI } from '@ai-sdk/openai'
 import { readFile, readdir } from 'fs/promises'
 import { join } from 'path'
@@ -10,10 +9,10 @@ const openai = createOpenAI({
 
 const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from 'ai'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { z } from 'zod'
 import { supabase } from '@/lib/supabase'
 import { retrieveContext, formatContextForPrompt } from '@/lib/rag'
+import { phongvuTools } from '@/lib/phongvu-tools'
 
 // Allow up to 30 seconds for streaming on Vercel Edge
 export const maxDuration = 30
