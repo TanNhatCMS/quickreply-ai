@@ -18,7 +18,7 @@ Static data entity for the home page product grid.
 | `image` | `string` | Product image URL |
 | `specs` | `ProductSpecs` | Hardware specifications |
 | `category` | `string` | Category slug (e.g., `"laptop"`) |
-| `discountBadge` | `string?` | Optional badge text (e.g., `"TIẾT KIỆM 10M"`) |
+| `discount` | `string` | Discount badge text (e.g., `"TIẾT KIỆM 10M"`) |
 
 ### ProductSpecs
 

@@ -35,7 +35,7 @@ Replace the current dark-themed storefront page with a premium "Titanium Blue" h
 - **Principle I: Solo MVP Focus** — PASS. Products are hardcoded, no backend integration. Chat widget reused. Cart is client-side only.
 - **Principle II: Architectural stack** — PASS. Next.js App Router, Tailwind CSS, TypeScript. No third-party infra.
 - **Principle III: Streamable UI** — N/A. Home page does not use chat streaming. Chat widget is reused from existing code.
-- **Principle IV: Fail-Safe UX** — PASS. Empty states and image fallbacks defined. No LLM/DB calls on home page.
+- **Principle IV: Fail-Safe UX** — PASS. Product data is static with no backend dependency. Empty states and image fallbacks defined. The reused ChatWidget still calls the chat API and depends on its corresponding environment configuration.
 - **Principle V: Definition of Ready** — PASS. Spec has User Alignment, Technical Flow, UI/UX Impact, and Success Metrics.
 
 ## Project Structure
