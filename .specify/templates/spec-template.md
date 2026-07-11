@@ -16,18 +16,16 @@
   you should still have a viable MVP (Minimum Viable Product) that delivers value.
 
   Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
+  
+  USER PERSONA ALIGNMENT: Each story must explicitly state how this benefits either the
+  Phong Vu Online Shopper or the system's performance metrics.
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)
 
 [Describe this user journey in plain language]
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority & Persona Alignment**: [Explain the value, how it aligns with user personas, and why it has this priority level]
 
 **Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
 
@@ -42,7 +40,7 @@
 
 [Describe this user journey in plain language]
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority & Persona Alignment**: [Explain the value, how it aligns with user personas, and why it has this priority level]
 
 **Independent Test**: [Describe how this can be tested independently]
 
@@ -51,81 +49,60 @@
 1. **Given** [initial state], **When** [action], **Then** [expected outcome]
 
 ---
-
-### User Story 3 - [Brief Title] (Priority: P3)
-
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-[Add more user stories as needed, each with an assigned priority]
 
 ### Edge Cases
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
 
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
 
-## Requirements *(mandatory)*
+## Technical Implementation Flow *(mandatory)*
 
 <!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
+  Outline a clear step-by-step description of the data flow between:
+  1. Next.js storefront frontend.
+  2. Next.js API Route Handler / Vercel AI SDK Core.
+  3. LLM tool calling.
 -->
+
+- **Step 1 (Trigger)**: [e.g. User submits request in <ChatInput>]
+- **Step 2 (API Route)**: [e.g. Route queries Supabase RAG embedding or routes tool call]
+- **Step 3 (Tool Call)**: [e.g. LLM executes function and returns UI components]
+
+## UI/UX Impact & Streamable React Components *(mandatory)*
+
+<!--
+  Outline the mock layout or details of the React Component that will be injected
+  directly into the chat stream via Streamable UI (e.g. Product Cards, comparison grids, buy buttons).
+-->
+
+- **Component Name**: [e.g. ProductCard]
+- **Interactive State**: [e.g. Clicking "Add to Cart" syncs to storefront Zustand store]
+- **Layout Description**: [e.g. Inline flex column, border-slate-200 with hover shadow]
+
+## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-*Example of marking unclear requirements:*
-
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-001**: System MUST [specific capability]
+- **FR-002**: System MUST [specific capability]
 
 ### Key Entities *(include if feature involves data)*
 
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- **[Entity 1]**: [What it represents, key attributes]
 
 ## Success Criteria *(mandatory)*
 
 <!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
+  Define measurable success criteria.
+  Explain how this feature contributes to the goal of "reducing response time to < 3 seconds" or "increasing conversion".
 -->
 
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: [e.g. System handles query under 3 seconds]
+- **SC-002**: [e.g. Increasing conversion rate by making Add to Cart instant (< 200ms)]
 
 ## Assumptions
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
-
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+- [Assumption 1]
+- [Assumption 2]
