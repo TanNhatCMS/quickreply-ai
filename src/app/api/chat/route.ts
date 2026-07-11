@@ -1,4 +1,11 @@
-import { openai } from '@ai-sdk/openai'
+import { createOpenAI } from '@ai-sdk/openai'
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
+})
+
+const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from 'ai'
 import { z } from 'zod'
 import { retrieveContext, formatContextForPrompt, queryDocuments } from '@/lib/rag'
@@ -111,7 +118,7 @@ export async function POST(req: Request) {
 
   // Stream with Vercel AI SDK v7
   const result = streamText({
-    model: openai('gpt-4o-mini'),
+    model: openai(AI_MODEL),
     system: buildSystemPrompt(ragContext),
     messages: await convertToModelMessages(messages),
     maxOutputTokens: 1024,
@@ -192,7 +199,7 @@ export async function POST(req: Request) {
     sessionId: sid,
     role: 'assistant',
     content: '[streaming response]',
-    model: 'gpt-4o-mini',
+    model: AI_MODEL,
     latencyMs,
   }).catch(() => {})
 
