@@ -2,14 +2,14 @@ export default function HeroSection() {
   return (
     <section className="grid grid-cols-1 md:grid-cols-4 gap-gutter h-auto md:h-[400px]">
       <div className="md:col-span-3 bg-gradient-to-br from-primary-container to-secondary rounded-xl overflow-hidden relative shadow-sm p-8 flex flex-col justify-center">
-        <div className="z-10 text-white max-w-lg space-y-4">
+        <div className="z-10 text-white max-w-[32rem] space-y-4">
           <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-sm font-semibold uppercase tracking-wider">
             Khuyến Mãi Độc Quyền
           </span>
-          <h1 className="font-headline-xl text-headline-xl text-white drop-shadow-sm">
+          <h1 className="font-headline-xl text-headline-xl text-white drop-shadow-sm font-bold leading-[1.15] tracking-tight">
             Thế Hệ AI<br />Sức Mạnh Mới
           </h1>
-          <p className="font-body-lg text-body-lg text-white/90">
+          <p className="font-body-lg text-body-lg text-white/90 leading-relaxed">
             Khám phá dải sản phẩm laptop AI thế hệ mới với hiệu năng vượt trội, tối ưu cho mọi tác vụ công việc và giải trí.
           </p>
           <button className="mt-4 bg-white text-primary font-semibold py-3 px-8 rounded-full hover:bg-surface-blue transition-colors w-fit">
