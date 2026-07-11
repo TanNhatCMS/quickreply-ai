@@ -5,7 +5,7 @@ import { homeProducts } from '@/lib/products'
 import { useCartStore } from '@/store/useCartStore'
 import ProductCard from './ProductCard'
 
-const brands = ['Asus', 'Acer', 'Lenovo'] as const
+const brands = ['Lenovo', 'Acer', 'HP', 'MSI'] as const
 
 export default function ProductGrid() {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
@@ -52,23 +52,34 @@ export default function ProductGrid() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {filtered.map((p) => (
-          <ProductCard
-            key={p.id}
-            product={p}
-            onAddToCart={() =>
-              addItem({
-                productId: p.id,
-                name: p.name,
-                brand: p.brand,
-                price: p.price,
-                image: p.image,
-              })
-            }
-          />
-        ))}
-      </div>
+      {filtered.length === 0 ? (
+        <div className="py-12 text-center">
+          <span className="material-symbols-outlined text-4xl text-outline-variant mb-2">
+            inventory_2
+          </span>
+          <p className="text-on-surface-variant text-body-sm">
+            Sản phẩm đang được cập nhật
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {filtered.map((p) => (
+            <ProductCard
+              key={p.id}
+              product={p}
+              onAddToCart={() =>
+                addItem({
+                  productId: p.id,
+                  name: p.name,
+                  brand: p.brand,
+                  price: p.price,
+                  image: p.image,
+                })
+              }
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

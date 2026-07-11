@@ -20,7 +20,7 @@ export default function HeroSection() {
       </div>
 
       <div className="flex flex-col gap-gutter">
-        <div className="flex-1 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 p-4 flex flex-col justify-center items-center text-center group cursor-pointer hover:shadow-md transition-shadow">
+        <button className="flex-1 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 p-4 flex flex-col justify-center items-center text-center group cursor-pointer hover:shadow-md transition-shadow">
           <span className="material-symbols-outlined text-4xl text-promo-orange mb-2 group-hover:scale-110 transition-transform">
             flash_on
           </span>
@@ -30,8 +30,8 @@ export default function HeroSection() {
           <p className="font-label-spec text-label-spec text-error mt-1">
             Giảm đến 50%
           </p>
-        </div>
-        <div className="flex-1 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 p-4 flex flex-col justify-center items-center text-center group cursor-pointer hover:shadow-md transition-shadow">
+        </button>
+        <button className="flex-1 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 p-4 flex flex-col justify-center items-center text-center group cursor-pointer hover:shadow-md transition-shadow">
           <span className="material-symbols-outlined text-4xl text-primary mb-2 group-hover:scale-110 transition-transform">
             school
           </span>
@@ -41,7 +41,7 @@ export default function HeroSection() {
           <p className="font-label-spec text-label-spec text-primary-container mt-1">
             Ưu đãi sinh viên
           </p>
-        </div>
+        </button>
       </div>
     </section>
   )

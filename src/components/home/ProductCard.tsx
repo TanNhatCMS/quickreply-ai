@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { HomeProduct } from '@/lib/products'
 
 interface ProductCardProps {
@@ -15,6 +16,8 @@ export default function ProductCard({
   product,
   onAddToCart,
 }: ProductCardProps) {
+  const [imgError, setImgError] = useState(false)
+
   return (
     <div className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/30 hover:shadow-lg transition-all duration-300 group flex flex-col h-full relative">
       <span className="absolute top-2 left-2 bg-promo-orange text-white text-[10px] font-bold px-2 py-1 rounded-sm z-10">
@@ -22,11 +25,19 @@ export default function ProductCard({
       </span>
 
       <div className="h-40 w-full flex items-center justify-center mb-4 p-2 bg-surface">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="object-contain max-h-full group-hover:scale-105 transition-transform duration-300"
-        />
+        {imgError ? (
+          <span className="material-symbols-outlined text-4xl text-outline-variant">
+            laptop_mac
+          </span>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.image}
+            alt={product.name}
+            className="object-contain max-h-full group-hover:scale-105 transition-transform duration-300"
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
 
       <p className="text-body-sm font-semibold text-on-surface line-clamp-2 mb-2">
