@@ -38,6 +38,31 @@
   --color-outline-variant: #c2c6d3;
   --color-background: #f9f9ff;
   --color-on-background: #191c21;
+  --color-promo-orange: #FFA940;
+  --color-alert-red: #E63946;
+  --color-success-green: #2ECC71;
+  --color-surface-blue: #F0F5FA;
+
+  --font-headline-xl: 'Hanken Grotesk', sans-serif;
+  --font-headline-lg: 'Hanken Grotesk', sans-serif;
+  --font-headline-lg-mobile: 'Hanken Grotesk', sans-serif;
+  --font-title-md: 'Hanken Grotesk', sans-serif;
+  --font-price-major: 'Hanken Grotesk', sans-serif;
+  --font-body-sm: 'Inter', sans-serif;
+  --font-label-spec: 'JetBrains Mono', monospace;
+
+  --text-headline-xl: 3rem;
+  --text-headline-lg: 2rem;
+  --text-headline-lg-mobile: 1.5rem;
+  --text-title-md: 1.125rem;
+  --text-body-sm: 0.875rem;
+  --text-label-spec: 0.75rem;
+  --text-price-major: 1.375rem;
+
+  --spacing-margin-edge: 2rem;
+  --spacing-stack-sm: 0.5rem;
+  --spacing-stack-md: 1rem;
+  --spacing-stack-lg: 2.5rem;
 
   --font-display-lg: 'Inter', sans-serif;
   --font-headline-md: 'Inter', sans-serif;
@@ -169,7 +194,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg-base);
+  background: var(--color-surface-blue, #F0F5FA);
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
