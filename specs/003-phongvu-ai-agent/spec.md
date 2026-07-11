@@ -8,6 +8,13 @@
 
 **Input**: User description: "Triển khai AI Agent cho chatbot Phong Vu sử dụng Vercel AI SDK với hệ thống skills và tools. Agent có khả năng tự động hóa các tác vụ bán hàng: tìm kiếm sản phẩm, so sánh, tư vấn, thêm vào giỏ hàng, và quản lý đơn hàng."
 
+## Clarifications
+
+### Session 2026-07-12
+
+- Q: Nguồn dữ liệu sản phẩm? → A: Dùng MCP tools query trực tiếp Phong Vũ Discovery API (realtime), bỏ RAG database. Constitution nguyên tắc IV cần cập nhật.
+- Q: Bảng `documents` còn cần không? → A: Giữ cho policy/warranty/FAQ (Supabase RAG), MCP cho sản phẩm.
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Agent tự động tìm kiếm sản phẩm theo yêu cầu (Priority: P1)
@@ -38,7 +45,7 @@ Agent có khả năng so sánh 2-3 sản phẩm theo nhiều tiêu chí (giá, t
 
 1. **Given** người dùng yêu cầu so sánh, **When** nhập "so sánh iPhone 15 và Samsung S24", **Then** Agent trả về bảng so sánh 2 sản phẩm với các tiêu chí chính (giá, camera, pin, hiệu năng)
 2. **Given** người dùng mô tả nhu cầu cụ thể, **When** nhập "tôi cần laptop để chỉnh sửa video", **Then** Agent gợi ý 2-3 sản phẩm phù hợp với lý do chi tiết cho từng gợi ý
-3. **Given** người dùng hỏi về sự khác biệt giữa hai sản phẩm, **When** Agent đã có thông tin từ RAG, **Then** Agent trả lời chính xác và trích dẫn nguồn thông tin
+3. **Given** người dùng hỏi về sự khác biệt giữa hai sản phẩm, **When** Agent đã có thông tin từ MCP tools, **Then** Agent trả lời chính xác và trích dẫn nguồn thông tin
 
 ---
 
@@ -87,7 +94,7 @@ Agent có khả năng trả lời các câu hỏi về chương trình khuyến 
 - **Step 1 (Trigger)**: Người dùng nhập tin nhắn vào `<ChatInput>` component trên giao diện storefront
 - **Step 2 (API Route)**: Tin nhắn được gửi đến Next.js API Route `/api/chat`, Vercel AI SDK nhận diện và phân tích ý định người dùng
 - **Step 3 (Tool Call)**: Agent xác định tool cần gọi (searchProducts, compareProducts, addToCart, getPromotions, getWarrantyInfo) và thực thi tool
-- **Step 4 (RAG Query)**: Nếu cần thông tin từ knowledge base, Agent query Supabase pgvector để lấy context liên quan
+- **Step 4 (MCP Query)**: Agent gọi MCP tools (search_products, get_product_detail, v.v.) để lấy dữ liệu sản phẩm realtime từ Phong Vũ API. Nếu cần thông tin chính sách/bảo hành, query Supabase pgvector từ bảng `documents`.
 - **Step 5 (Response)**: Agent tổng hợp kết quả và stream response về client, bao gồm cả text và streamable React components (Product Cards, Comparison Grids, Cart Summary)
 - **Step 6 (State Sync)**: Nếu có thay đổi giỏ hàng, Zustand store được cập nhật và broadcast qua custom DOM events để đồng bộ với Cart Drawer
 
@@ -114,11 +121,11 @@ Agent có khả năng trả lời các câu hỏi về chương trình khuyến 
 ### Functional Requirements
 
 - **FR-001**: Agent MUST tự động nhận diện ý định người dùng từ tin nhắn tự nhiên (natural language intent recognition)
-- **FR-002**: Agent MUST hỗ trợ tối thiểu 5 tool chính: searchProducts, compareProducts, addToCart, getPromotions, getWarrantyInfo
+- **FR-002**: Agent MUST hỗ trợ tối thiểu 6 MCP tool từ Phong Vũ Discovery API: search_products, get_product_detail, compare_products, get_recommendations, check_stock, get_popular_keywords, plus client-side addToCart
 - **FR-003**: Agent MUST stream response real-time về client sử dụng Vercel AI SDK streaming
 - **FR-004**: Agent MUST render React components (Product Cards, Comparison Grids) trực tiếp trong chat stream thông qua tool calling
 - **FR-005**: Agent MUST đồng bộ giỏ hàng với Zustand store và broadcast cập nhật qua custom DOM events
-- **FR-006**: Agent MUST trả lời câu hỏi từ RAG knowledge base với thông tin chính xác nhất
+- **FR-006**: Agent MUST trả lời câu hỏi sản phẩm từ MCP tools (Phong Vũ Discovery API) realtime, và câu hỏi chính sách/bảo hành/FAQ từ RAG knowledge base (bảng `documents` trong Supabase)
 - **FR-007**: Agent MUST thực hiện retry 3 lần im lặng khi gặp lỗi LLM hoặc database, sau đó hiển thị thông báo lỗi chung
 - **FR-008**: Agent MUST từ chối lịch sự các câu hỏi ngoài phạm vi hỗ trợ và hướng dẫn người dùng
 - **FR-009**: Agent MUST ghi lại tất cả tin nhắn (user, assistant, tool) vào database chat_messages để phục vụ dashboard trace
@@ -128,7 +135,6 @@ Agent có khả năng trả lời các câu hỏi về chương trình khuyến 
 
 - **ChatSession**: Phiên làm việc AI với khách hàng. Bao gồm user_agent, thời gian bắt đầu/kết thúc, metadata.
 - **ChatMessage**: Mỗi tin nhắn trong phiên. Bao gồm role (user/assistant/system/tool), nội dung, tool_calls, tokens_used, latency_ms.
-- **Document**: Knowledge base chunks cho RAG. Bao gồm title, content, category, embedding vector.
 - **CartItem** (client-side): Sản phẩm trong giỏ hàng. Bao gồm productId, name, price, brand, quantity, image.
 
 ## Success Criteria
@@ -144,9 +150,9 @@ Agent có khả năng trả lời các câu hỏi về chương trình khuyến 
 
 ## Assumptions
 
-- Knowledge base RAG đã được seed dữ liệu từ `help.phongvu.vn/llms-full.txt` vào Supabase pgvector
-- OpenAI API key (hoặc LLM provider khác) đã được cấu hình trong environment variables
-- Supabase project đã được cấu hình với pgvector extension và các migration đã chạy
+- Product data được truy xuất realtime từ Phong Vũ Discovery API qua MCP server (`phongvu-ai-agent/mcp-server`)
+- OpenAI API key đã được cấu hình trong environment variables
+- Supabase project đã được cấu hình cho chat trace (chat_sessions, chat_messages tables)
 - Frontend đang sử dụng Next.js App Router với React 18+
 - Zustand store hiện tại đã có cấu hình persist middleware với localStorage
 - Người dùng đã có session UUID trong cookie/localStorage
