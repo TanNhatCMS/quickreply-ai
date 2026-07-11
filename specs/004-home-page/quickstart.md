@@ -50,8 +50,8 @@ Open http://localhost:3000 — the home page should display with all sections.
 
 ### 5. Brand Filtering
 
-- Click "Asus" filter button above product grid
-- **Expected**: Grid filters to show only Asus products
+- Click "Lenovo" filter button above product grid
+- **Expected**: Grid filters to show only Lenovo products
 - **Verify**: Other brands hidden, filter button highlighted
 
 ### 6. Sticky Navigation

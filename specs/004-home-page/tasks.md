@@ -69,7 +69,7 @@
 ### Implementation for User Story 3
 
 - [x] T008 [P] [US3] Create ProductCard component in src/components/home/ProductCard.tsx — 'use client'. Props: HomeProduct. Card with: discount badge (absolute top-left, promo-orange), image area (h-40, bg-surface, object-contain, hover scale-105), product name (line-clamp-2), specs box (bg-surface-container-low, JetBrains Mono font-label-spec), price (font-price-major text-error), original price (line-through text-outline), "Thêm vào giỏ" button (bg-surface-variant, group-hover:bg-primary group-hover:text-white). Card hover: shadow-lg.
-- [x] T009 [US3] Create ProductGrid component in src/components/home/ProductGrid.tsx — 'use client'. Section header with AI icon + "Laptop AI - Hiệu Suất Đỉnh Cao" title. Brand filter buttons (Asus, Acer, Lenovo) with active state (border-primary text-primary). Grid layout: sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5. Filters homeProducts by selected brand using useState. Renders ProductCard for each. "Thêm vào giỏ" calls useCartStore.addItem().
+- [x] T009 [US3] Create ProductGrid component in src/components/home/ProductGrid.tsx — 'use client'. Section header with AI icon + "Laptop AI - Hiệu Suất Đỉnh Cao" title. Brand filter buttons (Lenovo, Acer, HP, MSI) with active state (border-primary text-primary). Grid layout: grid-cols-2 md:grid-cols-3 lg:grid-cols-5. Filters homeProducts by selected brand using useState. Renders ProductCard for each. "Thêm vào giỏ" calls useCartStore.addItem().
 
 **Checkpoint**: Core product experience complete — visitors can browse and add to cart
 
