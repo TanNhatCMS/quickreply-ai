@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import type { ConversationSummary, ConversationDetail } from '@/lib/dashboard'
 
 interface ConversationTableProps {
@@ -144,9 +144,8 @@ export default function ConversationTable({
                   </tr>
                 ))
               : sessions.map((s) => (
-                  <>
+                  <Fragment key={s.id}>
                     <tr
-                      key={s.id}
                       onClick={() => handleRowClick(s.id)}
                       className="border-b border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors"
                     >
@@ -183,7 +182,7 @@ export default function ConversationTable({
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
           </tbody>
         </table>
