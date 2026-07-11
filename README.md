@@ -4,7 +4,7 @@ AI chat widget embedded in a mockup Phong Vũ hardware storefront. Uses RAG (Ret
 
 ## Tech Stack
 
-- **Framework**: Next.js 14+ (App Router), React 19, TypeScript
+- **Framework**: Next.js 16 (App Router), React 19, TypeScript
 - **AI**: Vercel AI SDK v7 (`ai`, `@ai-sdk/openai`, `@ai-sdk/react`)
 - **State**: Zustand with `persist` middleware (localStorage)
 - **Database**: Supabase Postgres + pgvector (vector similarity search)
