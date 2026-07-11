@@ -38,10 +38,8 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@ai-sdk/mcp": "^2.0.10",
     "@ai-sdk/openai": "^4.0.11",
     "@ai-sdk/react": "4.0.23",
-    "@modelcontextprotocol/sdk": "^1.29.0",
     "@supabase/supabase-js": "^2.110.2",
     "ai": "^7.0.22",
     "lucide-react": "^1.24.0",
