@@ -1,5 +1,7 @@
 import { createMCPClient } from '@ai-sdk/mcp'
 import { createOpenAI } from '@ai-sdk/openai'
+import { readFile, readdir } from 'fs/promises'
+import { join } from 'path'
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -11,10 +13,62 @@ import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage }
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { z } from 'zod'
 import { supabase } from '@/lib/supabase'
+import { retrieveContext, formatContextForPrompt } from '@/lib/rag'
 
 // Allow up to 30 seconds for streaming on Vercel Edge
 export const maxDuration = 30
 export const runtime = 'nodejs'
+
+// ─── Skill Discovery ──────────────────────────────────────────────────────
+
+interface SkillMetadata {
+  name: string
+  description: string
+  path: string
+}
+
+function parseFrontmatter(content: string): { name: string; description: string } | null {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+  if (!match) return null
+  const yaml = match[1]
+  const nameMatch = yaml.match(/^name:\s*(.+)$/m)
+  const descMatch = yaml.match(/^description:\s*>?\s*\n?([\s\S]*?)(?=\n[a-z]|\nmetadata:|$)/m)
+  if (!nameMatch) return null
+  return {
+    name: nameMatch[1].trim(),
+    description: descMatch ? descMatch[1].replace(/\n\s*/g, ' ').trim() : '',
+  }
+}
+
+async function discoverSkills(dirs: string[]): Promise<SkillMetadata[]> {
+  const skills: SkillMetadata[] = []
+  const seen = new Set<string>()
+
+  for (const dir of dirs) {
+    try {
+      const entries = await readdir(dir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue
+        const skillDir = join(dir, entry.name)
+        const skillFile = join(skillDir, 'SKILL.md')
+        try {
+          const content = await readFile(skillFile, 'utf-8')
+          const fm = parseFrontmatter(content)
+          if (!fm || seen.has(fm.name)) continue
+          seen.add(fm.name)
+          skills.push({ name: fm.name, description: fm.description, path: skillDir })
+        } catch { continue }
+      }
+    } catch { continue }
+  }
+  return skills
+}
+
+function buildSkillsPrompt(skills: SkillMetadata[]): string {
+  if (!skills.length) return ''
+  const list = skills.map(s => `- **${s.name}**: ${s.description}`).join('\n')
+  return `\n## Skills (load on-demand)\n\nDùng tool \`loadSkill\` để load skill khi yêu cầu khớp mô tả. KHÔNG load tự động — chỉ khi cần.\n\nAvailable:\n${list}`
+}
 
 // ─── System prompt ─────────────────────────────────────────────────────────
 
@@ -31,7 +85,7 @@ const SYSTEM_PROMPT = `Bạn là QuickReply AI — trợ lý tư vấn bán hàn
 - So sánh: dùng bảng markdown
 - Sau mỗi trả lời, gợi ý hành động tiếp theo
 
-**Tools có sẵn:**
+**Tools có sẵn (BẮT BUỘC sử dụng khi tìm kiếm sản phẩm):**
 - search_products: tìm kiếm sản phẩm theo từ khóa, lọc giá/brand/attributes
 - get_product_detail: chi tiết sản phẩm theo SKU
 - compare_products: so sánh 2-3 sản phẩm
@@ -39,7 +93,22 @@ const SYSTEM_PROMPT = `Bạn là QuickReply AI — trợ lý tư vấn bán hàn
 - check_stock: kiểm tra tồn kho
 - get_popular_keywords: từ khóa phổ biến
 - addToCart: thêm vào giỏ hàng (client-side)
+
+**Quy tắc bắt buộc:**
+- Khi khách hàng hỏi về sản phẩm, giá, khuyến mãi, hoặc muốn mua hàng → PHẢI gọi search_products hoặc get_product_detail
+- KHÔNG BAO GIỜ nói "không thể truy cập cơ sở dữ liệu" — luôn dùng tools để tìm kiếm
+- Nếu tìm không thấy, thử lại với từ khóa khác hoặc gợi ý sản phẩm tương tự
 `
+
+// ─── Build system prompt with RAG context ──────────────────────────────────
+
+function buildSystemPrompt(ragContext: string, skills: SkillMetadata[]) {
+  let prompt = SYSTEM_PROMPT + buildSkillsPrompt(skills)
+  if (ragContext) {
+    prompt += `\n\n**Thông tin tham khảo (RAG):**\n${ragContext}`
+  }
+  return prompt
+}
 
 // ─── Trace helpers ─────────────────────────────────────────────────────────
 
@@ -106,26 +175,66 @@ export async function POST(req: Request) {
 
   await saveTrace({ sessionId: sid, role: 'user', content: latestUserMessage })
 
-  // ── Connect to Phong Vũ MCP server ──────────────────────────────────
-  const mcpClient = await createMCPClient({
-    transport: new StdioClientTransport({
-      command: 'node',
-      args: ['phongvu-ai-agent/mcp-server/index.js'],
-    }),
-  })
+  // ── RAG context for policy/warranty/FAQ ──────────────────────────────
+  let ragContext = ''
+  try {
+    const ctx = await retrieveContext(latestUserMessage)
+    ragContext = formatContextForPrompt(ctx)
+  } catch (err) {
+    console.warn('[chat/route] RAG retrieval failed:', err)
+  }
 
-  const mcpTools = await mcpClient.tools()
+  // ── Discover skills ───────────────────────────────────────────────────
+  const skills = await discoverSkills([
+    'phongvu-ai-agent/skills/phongvu-sales-agent',
+  ])
+
+  // ── Connect to Phong Vũ MCP server ──────────────────────────────────
+  let mcpClient: Awaited<ReturnType<typeof createMCPClient>> | null = null
+  let mcpTools: Record<string, unknown> = {}
+
+  try {
+    mcpClient = await createMCPClient({
+      transport: new StdioClientTransport({
+        command: 'node',
+        args: ['phongvu-ai-agent/mcp-server/index.js'],
+      }),
+    })
+    mcpTools = await mcpClient.tools()
+    console.log('[chat/route] MCP tools loaded:', Object.keys(mcpTools))
+  } catch (err) {
+    console.error('[chat/route] MCP connection failed:', err)
+  }
 
   // Stream with Vercel AI SDK v7
   const result = streamText({
     model: openai(AI_MODEL),
-    system: buildSystemPrompt(ragContext),
+    system: buildSystemPrompt(ragContext, skills),
     messages: await convertToModelMessages(messages),
     maxOutputTokens: 2048,
     maxRetries: 3,
 
     tools: {
       ...mcpTools,
+
+      // Skill loader — loads full SKILL.md instructions on demand
+      loadSkill: tool({
+        description: 'Load a skill to get specialized instructions for a specific task (research, compare, advise, support).',
+        inputSchema: z.object({
+          name: z.string().describe('Skill name: phongvu-researcher, phongvu-comparator, phongvu-advisor, phongvu-support'),
+        }),
+        execute: async ({ name }) => {
+          const skill = skills.find(s => s.name.toLowerCase() === name.toLowerCase())
+          if (!skill) return { error: `Skill '${name}' not found. Available: ${skills.map(s => s.name).join(', ')}` }
+          try {
+            const content = await readFile(join(skill.path, 'SKILL.md'), 'utf-8')
+            const stripped = content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trim()
+            return { skill: skill.name, instructions: stripped }
+          } catch {
+            return { error: `Failed to load skill '${name}'` }
+          }
+        },
+      }),
 
       // Client-side tool: addToCart (no server execute)
       addToCart: tool({
@@ -142,10 +251,17 @@ export async function POST(req: Request) {
       }),
     },
 
+    toolChoice: 'auto',
     stopWhen: stepCountIs(5),
 
     onError: ({ error }) => {
       console.error('[chat/route] streamText error:', error)
+    },
+
+    onFinish: () => {
+      // MCP client (stdio subprocess) must stay alive until the stream —
+      // and any tool calls issued during it — has fully finished.
+      mcpClient?.close().catch(() => { })
     },
   })
 
@@ -160,9 +276,6 @@ export async function POST(req: Request) {
     model: AI_MODEL,
     latencyMs,
   }).catch(() => { })
-
-  // Close MCP client after response
-  mcpClient.close().catch(() => { })
 
   return response
 }

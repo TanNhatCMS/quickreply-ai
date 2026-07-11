@@ -18,6 +18,28 @@ interface SearchKnowledgeResult {
   documents: KnowledgeDoc[]
 }
 
+interface MCPProduct {
+  sku: string
+  name: string
+  brand: string
+  url: string
+  priceCurrent: number | null
+  priceFormatted: string
+  inStock: boolean
+  image: string
+  discount: number
+}
+
+interface SearchProductsResult {
+  query: string
+  total: number
+  products: MCPProduct[]
+}
+
+interface CompareProductsResult {
+  comparison: MCPProduct[]
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Extract all text content from a UIMessage's parts array */
@@ -110,19 +132,70 @@ export default function ChatWidget() {
   // ── Render tool results as React components ──────────────────────────
   const renderToolOutput = useCallback(
     (toolName: string, output: unknown) => {
+      // MCP: search_products → Product cards
+      if (toolName === 'search_products') {
+        const { products, total } = output as SearchProductsResult
+        if (!products?.length) return <p className="text-sm text-gray-400">Không tìm thấy sản phẩm phù hợp.</p>
+
+        return (
+          <div className="flex flex-col gap-2 mt-1">
+            <p className="text-xs text-gray-400">{total} sản phẩm tìm thấy</p>
+            {products.map((p) => (
+              <a key={p.sku} href={p.url} target="_blank" rel="noopener noreferrer" className="product-card-link">
+                <div className="product-card-mcp">
+                  {p.image && <img src={p.image} alt={p.name} className="product-card-img" />}
+                  <div className="product-card-info">
+                    <p className="product-card-brand">{p.brand}</p>
+                    <p className="product-card-name">{p.name}</p>
+                    <div className="product-card-price-row">
+                      <span className="product-card-price">{p.priceFormatted}</span>
+                      {p.discount > 0 && <span className="product-card-discount">-{p.discount}%</span>}
+                    </div>
+                    <p className={`product-card-stock ${p.inStock ? 'in-stock' : 'out-of-stock'}`}>
+                      {p.inStock ? 'Còn hàng' : 'Hết hàng'}
+                    </p>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )
+      }
+
+      // MCP: compare_products → Comparison grid
+      if (toolName === 'compare_products') {
+        const { comparison } = output as CompareProductsResult
+        if (!comparison?.length) return <p className="text-sm text-gray-400">Không thể so sánh sản phẩm.</p>
+
+        return (
+          <div className="comparison-grid">
+            {comparison.map((p) => (
+              <div key={p.sku} className="comparison-column">
+                {p.image && <img src={p.image} alt={p.name} className="comparison-img" />}
+                <p className="comparison-brand">{p.brand}</p>
+                <p className="comparison-name">{p.name}</p>
+                <p className="comparison-price">{p.priceFormatted}</p>
+                <p className={`comparison-stock ${p.inStock ? 'in-stock' : 'out-of-stock'}`}>
+                  {p.inStock ? 'Còn hàng' : 'Hết hàng'}
+                </p>
+                <a href={p.url} target="_blank" rel="noopener noreferrer" className="comparison-link">
+                  Xem chi tiết
+                </a>
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      // RAG: searchKnowledge → Knowledge cards (policy/warranty/FAQ)
       if (toolName === 'searchKnowledge') {
         const { documents } = output as SearchKnowledgeResult
         if (!documents?.length) return <p className="text-sm text-gray-400">Không tìm thấy thông tin phù hợp.</p>
 
         const categoryLabels: Record<string, string> = {
-          company: '🏢 Công ty',
-          policy: '📋 Chính sách',
-          warranty: '🛡️ Bảo hành',
-          payment: '💳 Thanh toán',
-          delivery: '🚚 Giao hàng',
-          service: '🔧 Dịch vụ',
-          legal: '⚖️ Pháp lý',
-          faq: '❓ FAQ',
+          company: '🏢 Công ty', policy: '📋 Chính sách', warranty: '🛡️ Bảo hành',
+          payment: '💳 Thanh toán', delivery: '🚚 Giao hàng', service: '🔧 Dịch vụ',
+          legal: '⚖️ Pháp lý', faq: '❓ FAQ',
         }
 
         return (

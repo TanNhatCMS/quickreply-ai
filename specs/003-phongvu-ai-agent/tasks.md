@@ -45,10 +45,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create `src/components/ProductCard.tsx` component: displays product name, brand, price (VND formatted), image, stock status, "Thêm vào giỏ" button
-- [ ] T013 [US1] Implement product card rendering in `ChatWidget.tsx`: when `search_products` tool returns results, render `ProductCard` components in chat stream
-- [ ] T014 [US1] Handle empty search results: display "Không tìm thấy sản phẩm phù hợp" message
-- [ ] T015 [US1] Add price filter parsing in system prompt: "dưới 20 triệu" → `price_lte: 20000000`, "trên 10 triệu" → `price_gte: 10000000`
+- [x] T012 [P] [US1] Create `src/components/ProductCard.tsx` component: displays product name, brand, price (VND formatted), image, stock status, "Thêm vào giỏ" button
+- [x] T013 [US1] Implement product card rendering in `ChatWidget.tsx`: when `search_products` tool returns results, render `ProductCard` components in chat stream
+- [x] T014 [US1] Handle empty search results: display "Không tìm thấy sản phẩm phù hợp" message
+- [x] T015 [US1] Add price filter parsing in system prompt: "dưới 20 triệu" → `price_lte: 20000000`, "trên 10 triệu" → `price_gte: 10000000`
 
 **Checkpoint**: Product search working end-to-end via MCP
 
@@ -62,9 +62,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Create `src/components/ComparisonGrid.tsx` component: displays 2-3 products in columns with specs as rows
-- [ ] T017 [US2] Implement comparison rendering in `ChatWidget.tsx`: when `compare_products` tool returns results, render `ComparisonGrid`
-- [ ] T018 [US2] Add "Chọn mua" button per column in `ComparisonGrid` that calls `addToCart`
+- [x] T016 [P] [US2] Create `src/components/ComparisonGrid.tsx` component: displays 2-3 products in columns with specs as rows
+- [x] T017 [US2] Implement comparison rendering in `ChatWidget.tsx`: when `compare_products` tool returns results, render `ComparisonGrid`
+- [x] T018 [US2] Add "Chọn mua" button per column in `ComparisonGrid` that calls `addToCart`
 
 **Checkpoint**: Product comparison working
 
@@ -78,10 +78,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Connect `ProductCard` "Thêm vào giỏ" button to `useCartStore.addItem()`
-- [ ] T020 [US3] Connect `ComparisonGrid` "Chọn mua" button to `useCartStore.addItem()`
-- [ ] T021 [US3] Implement `addToCart` client-side tool in `ChatWidget.tsx`: on `onToolCall`, call `addItem` + `toggleDrawer(true)`
-- [ ] T022 [US3] Add cart summary rendering: when user asks "giỏ hàng có gì", Agent reads cart state and responds
+- [x] T019 [US3] Connect `ProductCard` "Thêm vào giỏ" button to `useCartStore.addItem()`
+- [x] T020 [US3] Connect `ComparisonGrid` "Chọn mua" button to `useCartStore.addItem()`
+- [x] T021 [US3] Implement `addToCart` client-side tool in `ChatWidget.tsx`: on `onToolCall`, call `addItem` + `toggleDrawer(true)`
+- [x] T022 [US3] Add cart summary rendering: when user asks "giỏ hàng có gì", Agent reads cart state and responds
 
 **Checkpoint**: Cart sync working from chat widget
 
@@ -95,9 +95,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T023 [US4] Update system prompt to include RAG context injection: when user asks about warranty/policy/FAQ, retrieve from `documents` table via `queryDocuments()`
-- [ ] T024 [US4] Add RAG context to system prompt in `route.ts`: call `retrieveContext()` + `formatContextForPrompt()` and inject into system message
-- [ ] T025 [US4] Test RAG queries with sample warranty/policy questions
+- [x] T023 [US4] Update system prompt to include RAG context injection: when user asks about warranty/policy/FAQ, retrieve from `documents` table via `queryDocuments()`
+- [x] T024 [US4] Add RAG context to system prompt in `route.ts`: call `retrieveContext()` + `formatContextForPrompt()` and inject into system message
+- [x] T025 [US4] Test RAG queries with sample warranty/policy questions
 
 **Checkpoint**: Warranty/policy questions answered via RAG
 
@@ -107,11 +107,11 @@
 
 **Purpose**: Error handling, testing, documentation
 
-- [ ] T026 Update `specs/003-phongvu-ai-agent/spec.md` to align with MCP-based architecture
-- [ ] T027 Update `CLAUDE.md` data model section to reflect MCP + RAG hybrid approach
-- [ ] T028 Run `quickstart.md` validation scenarios end-to-end
-- [ ] T029 Verify TypeScript build: `pnpm exec tsc --noEmit` → 0 errors
-- [ ] T030 Verify tests pass: `pnpm test` → all green
+- [x] T026 Update `specs/003-phongvu-ai-agent/spec.md` to align with MCP-based architecture
+- [x] T027 Update `CLAUDE.md` data model section to reflect MCP + RAG hybrid approach
+- [x] T028 Run `quickstart.md` validation scenarios end-to-end
+- [x] T029 Verify TypeScript build: `pnpm exec tsc --noEmit` → 0 errors
+- [x] T030 Verify tests pass: `pnpm test` → all green
 
 ---
 
