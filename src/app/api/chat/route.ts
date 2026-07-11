@@ -1,5 +1,12 @@
-import { openai } from '@ai-sdk/openai'
 import { createMCPClient } from '@ai-sdk/mcp'
+import { createOpenAI } from '@ai-sdk/openai'
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  ...(process.env.OPENAI_BASE_URL && { baseURL: process.env.OPENAI_BASE_URL }),
+})
+
+const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from 'ai'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { z } from 'zod'
@@ -111,8 +118,8 @@ export async function POST(req: Request) {
 
   // Stream with Vercel AI SDK v7
   const result = streamText({
-    model: openai('gpt-4o-mini'),
-    system: SYSTEM_PROMPT,
+    model: openai(AI_MODEL),
+    system: buildSystemPrompt(ragContext),
     messages: await convertToModelMessages(messages),
     maxOutputTokens: 2048,
     maxRetries: 3,
@@ -150,12 +157,12 @@ export async function POST(req: Request) {
     sessionId: sid,
     role: 'assistant',
     content: '[streaming response]',
-    model: 'gpt-4o-mini',
+    model: AI_MODEL,
     latencyMs,
-  }).catch(() => {})
+  }).catch(() => { })
 
   // Close MCP client after response
-  mcpClient.close().catch(() => {})
+  mcpClient.close().catch(() => { })
 
   return response
 }

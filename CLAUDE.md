@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-Spec-kit planning phase. No application code exists (`src/` not created). Feature artifacts live in `specs/001-quickreply-ai/spec.md`, `plan.md`, `research.md`, `data-model.md` — no `tasks.md` yet, so run `/speckit-tasks` before `/speckit-implement`.
+Application code exists in `src/` with working components, API route, and tests. Feature artifacts live in `specs/001-quickreply-ai/spec.md`, `plan.md`, `research.md`, `data-model.md`. Check `specs/001-quickreply-ai/tasks.md` for remaining work.
 
 ## Spec-Kit Workflow
 
@@ -30,23 +30,24 @@ An AI chat widget embedded in a mockup storefront (branded around Phong Vu hardw
 - Identifies users via **anonymous session UUIDs** in cookies/localStorage (no login for MVP).
 - Retries failed RAG/LLM calls up to 3 times silently before surfacing a generic error to the user.
 
-### Planned Architecture (not yet scaffolded)
+### Architecture (implemented)
 
 ```text
 src/
 ├── app/
-│   ├── api/chat/route.ts   # LLM streaming, RAG retrieval, tool call setup (Vercel Edge/Serverless)
+│   ├── api/chat/route.ts   # Edge runtime, AI SDK v7 streamText, RAG, tool definitions
 │   ├── layout.tsx
-│   └── page.tsx            # Mockup storefront page
+│   └── page.tsx            # Mockup Phong Vũ storefront
 ├── components/
 │   ├── CartDrawer.tsx      # Slide-out shopping cart
 │   ├── ChatWidget.tsx      # Expandable interactive chat panel
-│   └── ProductCard.tsx     # Streamed into the chat via tool calls
+│   └── ProductCard.tsx     # Streamed into chat via tool calls
 ├── store/
-│   └── useCartStore.ts     # Zustand store, `persist` middleware, key `phongvu-cart-store`
+│   └── useCartStore.ts     # Zustand store, persist middleware, key `phongvu-cart-store`
 └── lib/
-    ├── supabase.ts         # Supabase client initializer
-    └── rag.ts              # pgvector semantic search queries
+    ├── supabase.ts         # Supabase client + DB type definitions
+    ├── rag.ts              # OpenAI embeddings + pgvector RPC
+    └── session.ts          # Anonymous UUID in localStorage
 ```
 
 Key architectural constraint: LLM tool-calling/RAG logic must stay in `src/lib` (library-first), independently testable without rendering the UI — see the Constitution Check in `plan.md`.
@@ -73,9 +74,9 @@ Client-side cart state (Zustand, not a DB table): `CartItem { productId, name, p
 - Chat trace: every message saved to DB with tokens, latency, model for dashboard replay.
 - LLM/RAG failures: silent retry ×3, then generic user-facing error.
 
-### Planned Stack
+### Stack (implemented)
 
-TypeScript, Next.js 14+ (App Router), React 18+, Vercel AI SDK (`ai`, `@ai-sdk/openai`, `@ai-sdk/elements`), `zustand`, `@supabase/supabase-js`, `lucide-react`. Testing: Vitest (unit/integration), Playwright (E2E). Target: Vercel Serverless/Edge runtime.
+TypeScript, Next.js 16 (App Router), React 19, Vercel AI SDK v7 (`ai`, `@ai-sdk/openai`, `@ai-sdk/react`), `zustand`, `@supabase/supabase-js`, `lucide-react`. Testing: Vitest (unit/integration), Playwright (E2E). Target: Vercel Serverless/Edge runtime.
 
 Performance targets: first-token latency < 1.5s for RAG queries; cart UI updates < 200ms; no layout shift from streamed components.
 
