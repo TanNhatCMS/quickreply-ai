@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, type UIMessage } from 'ai'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { MessageSquare, X, Send, Loader2, Bot, User } from 'lucide-react'
+import { MessageSquare, X, Send, Loader2, Bot, User, GitCompare, Check } from 'lucide-react'
 import { getSessionId } from '@/lib/session'
 import { useCartStore } from '@/store/useCartStore'
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -58,9 +58,21 @@ export default function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [inputValue, setInputValue] = useState('')
+  const [compareList, setCompareList] = useState<MCPProduct[]>([])
 
   const addItem = useCartStore((s) => s.addItem)
   const toggleDrawer = useCartStore((s) => s.toggleDrawer)
+
+  // ── Compare helpers ────────────────────────────────────────────────────────
+  const toggleCompare = useCallback((product: MCPProduct) => {
+    setCompareList((prev) => {
+      const exists = prev.find((p) => p.sku === product.sku)
+      if (exists) return prev.filter((p) => p.sku !== product.sku)
+      if (prev.length >= 2) return prev // max 2
+      return [...prev, product]
+    })
+  }, [])
+
 
   // ── Vercel AI SDK v7 useChat ──────────────────────────────────────────────
   const { messages, sendMessage, status, error } =
@@ -105,6 +117,15 @@ export default function ChatWidget() {
 
   const isLoading = status === 'streaming' || status === 'submitted'
 
+  const sendCompare = useCallback(() => {
+    if (compareList.length !== 2) return
+    const [a, b] = compareList
+    sendMessage({
+      text: `So sánh ${a.name} với ${b.name}`,
+    })
+    setCompareList([])
+  }, [compareList, sendMessage])
+
   // Auto-scroll to newest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -132,6 +153,7 @@ export default function ChatWidget() {
   // ── Render tool results as React components ──────────────────────────
   const renderToolOutput = useCallback(
     (toolName: string, output: unknown) => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       // MCP: search_products → Product cards
       if (toolName === 'search_products') {
         const { products, total } = output as SearchProductsResult
@@ -139,55 +161,79 @@ export default function ChatWidget() {
 
         return (
           <div className="flex flex-col gap-2 mt-1">
-            <p className="text-xs text-outline">{total} sản phẩm tìm thấy</p>
-            {products.map((p) => (
-              <div key={p.sku} className="bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
-                <div className="p-3 flex gap-3">
-                  {p.image && (
-                    <img
-                      src={p.image}
-                      alt={p.name}
-                      className="w-16 h-16 object-contain bg-surface rounded-lg flex-shrink-0"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wide">{p.brand}</p>
-                    <p className="text-xs font-semibold text-on-surface line-clamp-2 leading-snug mt-0.5">{p.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm font-bold text-error">{p.priceFormatted}</span>
-                      {p.discount > 0 && (
-                        <span className="text-[10px] font-bold bg-error/10 text-error px-1.5 py-0.5 rounded-full">
-                          -{p.discount}%
-                        </span>
-                      )}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-outline">{total} sản phẩm tìm thấy</p>
+              <p className="text-[10px] text-outline">Chọn 2 máy để so sánh</p>
+            </div>
+            {products.map((p) => {
+              const isSelected = compareList.some((c) => c.sku === p.sku)
+              const isDisabled = compareList.length >= 2 && !isSelected
+              return (
+                <div
+                  key={p.sku}
+                  className={`bg-white rounded-xl border overflow-hidden shadow-sm transition-all ${
+                    isSelected ? 'border-primary ring-1 ring-primary/30' : 'border-outline-variant/30'
+                  }`}
+                >
+                  <div className="p-3 flex gap-3">
+                    {p.image && (
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        className="w-16 h-16 object-contain bg-surface rounded-lg flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wide">{p.brand}</p>
+                      <p className="text-xs font-semibold text-on-surface line-clamp-2 leading-snug mt-0.5">{p.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm font-bold text-error">{p.priceFormatted}</span>
+                        {p.discount > 0 && (
+                          <span className="text-[10px] font-bold bg-error/10 text-error px-1.5 py-0.5 rounded-full">
+                            -{p.discount}%
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-[10px] mt-0.5 font-medium ${p.inStock ? 'text-success-green' : 'text-error'}`}>
+                        {p.inStock ? '● Còn hàng' : '○ Hết hàng'}
+                      </p>
                     </div>
-                    <p className={`text-[10px] mt-0.5 font-medium ${p.inStock ? 'text-success-green' : 'text-error'}`}>
-                      {p.inStock ? '● Còn hàng' : '○ Hết hàng'}
-                    </p>
+                  </div>
+                  <div className="px-3 pb-3 flex gap-2">
+                    <a
+                      href={p.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-1.5 text-center text-xs font-semibold border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors"
+                    >
+                      Xem chi tiết
+                    </a>
+                    <button
+                      onClick={() => {
+                        addItem({ productId: p.sku, name: p.name, brand: p.brand, price: p.priceCurrent ?? 0, image: p.image }, 1)
+                        toggleDrawer(true)
+                      }}
+                      disabled={!p.inStock}
+                      className="flex-1 py-1.5 text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Thêm giỏ
+                    </button>
+                    <button
+                      onClick={() => toggleCompare(p)}
+                      disabled={isDisabled}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                        isSelected
+                          ? 'bg-primary text-white'
+                          : 'border border-outline-variant/60 text-on-surface-variant hover:border-primary hover:text-primary'
+                      } disabled:opacity-30 disabled:cursor-not-allowed`}
+                      title={isSelected ? 'Bỏ chọn' : 'Chọn để so sánh'}
+                    >
+                      {isSelected ? <Check size={12} /> : <GitCompare size={12} />}
+                    </button>
                   </div>
                 </div>
-                <div className="px-3 pb-3 flex gap-2">
-                  <a
-                    href={p.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 py-1.5 text-center text-xs font-semibold border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors"
-                  >
-                    Xem chi tiết
-                  </a>
-                  <button
-                    onClick={() => {
-                      addItem({ productId: p.sku, name: p.name, brand: p.brand, price: p.priceCurrent ?? 0, image: p.image }, 1)
-                      toggleDrawer(true)
-                    }}
-                    disabled={!p.inStock}
-                    className="flex-1 py-1.5 text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Thêm giỏ hàng
-                  </button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )
       }
@@ -245,7 +291,8 @@ export default function ChatWidget() {
 
       return null
     },
-    [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [compareList, addItem, toggleDrawer, toggleCompare],
   )
 
   // ── Chat bubble toggle button ────────────────────────────────────────
@@ -380,6 +427,39 @@ export default function ChatWidget() {
 
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Compare floating bar */}
+          {compareList.length > 0 && (
+            <div className="px-4 py-2.5 bg-primary/5 border-t border-primary/20 flex items-center gap-2">
+              <GitCompare size={14} className="text-primary flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-primary leading-tight">
+                  {compareList.length === 1
+                    ? `Đã chọn: ${compareList[0].name.slice(0, 24)}…`
+                    : `So sánh ${compareList.length}/2 sản phẩm`}
+                </p>
+                {compareList.length === 1 && (
+                  <p className="text-[10px] text-outline">Chọn thêm 1 máy nữa</p>
+                )}
+              </div>
+              {compareList.length === 2 && (
+                <button
+                  onClick={sendCompare}
+                  disabled={isLoading}
+                  className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors flex-shrink-0"
+                >
+                  So sánh ngay
+                </button>
+              )}
+              <button
+                onClick={() => setCompareList([])}
+                className="text-outline hover:text-error transition-colors flex-shrink-0"
+                title="Xóa lựa chọn"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
 
           {/* Input bar */}
           <form onSubmit={handleSend} className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest">
