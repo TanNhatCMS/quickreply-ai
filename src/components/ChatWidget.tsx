@@ -167,14 +167,17 @@ export default function ChatWidget() {
           {/* Header */}
           <div className="chat-header">
             <div className="chat-header-info">
-              <Bot size={18} className="text-indigo-300" />
+              <div className="relative">
+                <Bot size={24} />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success-green border-2 border-primary rounded-full"></span>
+              </div>
               <div>
-                <p className="font-semibold text-sm leading-tight">QuickReply AI</p>
-                <p className="text-xs text-indigo-300">Tư vấn viên Phong Vũ</p>
+                <p className="font-bold text-base leading-tight">QuickReply AI</p>
+                <p className="text-[10px] opacity-80 uppercase tracking-wider">Đang trực tuyến</p>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="chat-close-btn" aria-label="Đóng">
-              <X size={16} />
+              <X size={20} />
             </button>
           </div>
 
@@ -182,9 +185,9 @@ export default function ChatWidget() {
           <div className="chat-messages">
             {messages.length === 0 && (
               <div className="chat-welcome">
-                <Bot size={32} className="text-indigo-400 mb-2" />
-                <p className="font-semibold text-gray-200 mb-1">Xin chào! 👋</p>
-                <p className="text-sm text-gray-400">
+                <Bot size={32} className="text-primary mb-2" />
+                <p className="font-semibold text-on-surface mb-1">Xin chào! 👋</p>
+                <p className="text-sm text-on-surface-variant">
                   Tôi có thể giúp bạn tìm laptop, so sánh thông số, xem khuyến mãi và chính sách bảo hành.
                 </p>
                 <div className="chat-suggestions">
@@ -211,9 +214,9 @@ export default function ChatWidget() {
               <div key={msg.id} className={`chat-message ${msg.role}`}>
                 <div className="chat-message-avatar">
                   {msg.role === 'user' ? (
-                    <User size={14} />
+                    <User size={16} />
                   ) : (
-                    <Bot size={14} />
+                    <Bot size={16} />
                   )}
                 </div>
 
@@ -241,7 +244,7 @@ export default function ChatWidget() {
                         return (
                           <div key={tp.toolCallId} className="chat-tool-loading">
                             <Loader2 size={12} className="animate-spin" />
-                            <span className="text-xs text-gray-400">Đang tìm kiếm...</span>
+                            <span className="text-xs text-outline">Đang tìm kiếm...</span>
                           </div>
                         )
                       }
@@ -255,7 +258,7 @@ export default function ChatWidget() {
             {isLoading && (
               <div className="chat-message assistant">
                 <div className="chat-message-avatar">
-                  <Bot size={14} />
+                  <Bot size={16} />
                 </div>
                 <div className="chat-bubble chat-typing">
                   <span className="typing-dot" />
@@ -276,30 +279,32 @@ export default function ChatWidget() {
           </div>
 
           {/* Input bar */}
-          <form onSubmit={handleSend} className="chat-input-bar">
-            <input
-              ref={inputRef}
-              id="chat-input"
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Nhập câu hỏi của bạn..."
-              className="chat-input"
-              disabled={isLoading}
-              autoComplete="off"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !inputValue.trim()}
-              className="chat-send-btn"
-              aria-label="Gửi"
-            >
-              {isLoading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Send size={16} />
-              )}
-            </button>
+          <form onSubmit={handleSend} className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest">
+            <div className="flex items-center gap-2 bg-surface-container-low rounded-full px-4 py-2 border border-outline-variant/30 focus-within:border-primary transition-colors">
+              <input
+                ref={inputRef}
+                id="chat-input"
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Nhập tin nhắn..."
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-on-surface p-0 placeholder:text-outline outline-none"
+                disabled={isLoading}
+                autoComplete="off"
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !inputValue.trim()}
+                className="text-primary hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center bg-transparent border-none"
+                aria-label="Gửi"
+              >
+                {isLoading ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  <Send size={20} />
+                )}
+              </button>
+            </div>
           </form>
         </div>
       )}
