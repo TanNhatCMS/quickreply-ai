@@ -194,7 +194,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-surface-blue, #F0F5FA);
+  background: var(--bg-base);
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -583,7 +583,7 @@ body {
 .chat-bubble {
   padding: 0.75rem;
   font-size: 0.875rem; line-height: 1.55;
-  white-space: pre-wrap; word-break: break-word;
+  white-space: pre-wrap; overflow-wrap: anywhere;
 }
 
 .chat-message.user .chat-bubble {

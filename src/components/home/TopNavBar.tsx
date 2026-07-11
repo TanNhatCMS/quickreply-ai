@@ -17,6 +17,7 @@ export default function TopNavBar() {
           <input
             type="text"
             placeholder="Bạn muốn tìm gì..."
+            aria-label="Tìm kiếm sản phẩm"
             className="rounded-full bg-surface-container-low border border-outline-variant/50 py-2.5 pl-4 pr-12 text-body-lg w-80 focus:outline-none focus:border-primary"
           />
           <span className="material-symbols-outlined absolute right-4 text-on-surface-variant">
@@ -40,6 +41,7 @@ export default function TopNavBar() {
 
         <button
           onClick={() => toggleDrawer(true)}
+          aria-label={`Mở giỏ hàng${cartCount > 0 ? `, ${cartCount} sản phẩm` : ''}`}
           className="relative p-2 rounded-full hover:bg-surface-container-low transition-colors"
         >
           <span className="material-symbols-outlined text-on-surface-variant text-2xl">
