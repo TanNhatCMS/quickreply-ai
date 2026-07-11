@@ -1,0 +1,53 @@
+{
+  "name": "quickreply-ai",
+  "version": "1.0.0",
+  "description": "",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TanNhatCMS/quickreply-ai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/TanNhatCMS/quickreply-ai/issues"
+  },
+  "homepage": "https://github.com/TanNhatCMS/quickreply-ai#readme",
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "16.2.10",
+    "playwright": "^1.61.1",
+    "supabase": "^2.109.1",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^4.0.11",
+    "@ai-sdk/react": "4.0.23",
+    "@supabase/supabase-js": "^2.110.2",
+    "ai": "^7.0.22",
+    "lucide-react": "^1.24.0",
+    "next": "16.2.10",
+    "openai": "^6.46.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  }
+}
