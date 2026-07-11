@@ -1,7 +1,7 @@
 export default function HomeFooter() {
   return (
-    <footer className="bg-surface-container-lowest w-full mt-[var(--spacing-stack-lg)] border-t border-outline-variant">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-[var(--spacing-gutter)] px-[var(--spacing-margin-edge)] py-[var(--spacing-stack-lg)] max-w-[var(--spacing-container-max)] mx-auto">
+    <footer className="bg-surface-container-lowest w-full mt-stack-lg border-t border-outline-variant">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter px-margin-edge py-stack-lg max-w-container-max mx-auto">
         <div>
           <span className="text-xl font-bold text-primary">Phong Vu</span>
           <p className="mt-3 text-body-sm text-on-surface-variant">
@@ -10,7 +10,7 @@ export default function HomeFooter() {
         </div>
 
         <div>
-          <h3 className="font-[family-name:var(--font-title-md)] text-[length:var(--text-title-md)] text-primary font-bold mb-4">
+          <h3 className="font-title-md text-title-md text-primary font-bold mb-4">
             Về Phong Vũ
           </h3>
           <ul className="space-y-2">
@@ -30,7 +30,7 @@ export default function HomeFooter() {
         </div>
 
         <div>
-          <h3 className="font-[family-name:var(--font-title-md)] text-[length:var(--text-title-md)] text-primary font-bold mb-4">
+          <h3 className="font-title-md text-title-md text-primary font-bold mb-4">
             Chính sách
           </h3>
           <ul className="space-y-2">
@@ -50,7 +50,7 @@ export default function HomeFooter() {
         </div>
 
         <div>
-          <h3 className="font-[family-name:var(--font-title-md)] text-[length:var(--text-title-md)] text-primary font-bold mb-4">
+          <h3 className="font-title-md text-title-md text-primary font-bold mb-4">
             Liên hệ
           </h3>
           <ul className="space-y-3">

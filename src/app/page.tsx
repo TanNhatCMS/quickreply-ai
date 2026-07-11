@@ -10,9 +10,9 @@ export default function HomePage() {
     <div className="theme-titanium bg-surface-blue text-on-surface min-h-screen">
       <TopNavBar />
       <ClientWidgets />
-      <main className="pt-28 pb-16 px-[var(--spacing-margin-edge)] w-full max-w-[var(--spacing-container-max)] mx-auto space-y-[var(--spacing-stack-lg)]">
+      <main className="pt-28 pb-16 px-margin-edge w-full max-w-container-max mx-auto space-y-stack-lg">
         <HeroSection />
-        <section className="space-y-[var(--spacing-stack-md)]">
+        <section className="space-y-stack-md">
           <CategoryBarWrapper />
         </section>
         <ProductGrid />

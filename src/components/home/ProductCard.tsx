@@ -33,7 +33,7 @@ export default function ProductCard({
         {product.name}
       </p>
 
-      <div className="text-label-spec text-on-surface-variant space-y-1 mb-4 flex-grow bg-surface-container-low p-2 rounded font-[family-name:var(--font-label-spec)]">
+      <div className="text-label-spec text-on-surface-variant space-y-1 mb-4 flex-grow bg-surface-container-low p-2 rounded font-label-spec">
         <p>{product.specs.cpu}</p>
         <p>{product.specs.gpu}</p>
         <p>
@@ -42,7 +42,7 @@ export default function ProductCard({
       </div>
 
       <div className="flex items-baseline gap-2">
-        <span className="font-[family-name:var(--font-price-major)] text-[length:var(--text-price-major)] font-bold text-error">
+        <span className="font-price-major text-price-major font-bold text-error">
           {formatVND(product.price)}
         </span>
         <span className="text-body-sm text-outline line-through">

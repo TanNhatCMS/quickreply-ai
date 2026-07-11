@@ -18,7 +18,7 @@ export default function ProductGrid() {
   return (
     <section
       id="products"
-      className="space-y-[var(--spacing-stack-md)] bg-white p-6 rounded-2xl shadow-sm border border-outline-variant/20"
+      className="space-y-stack-md bg-white p-6 rounded-2xl shadow-sm border border-outline-variant/20"
     >
       <div className="flex items-center gap-3">
         <div className="bg-primary p-2 rounded-lg">
