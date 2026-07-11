@@ -56,3 +56,22 @@ export interface ChatMessage {
   model: string | null
   created_at: string
 }
+
+export interface OrderItem {
+  productId: string
+  name: string
+  brand: string
+  price: number
+  quantity: number
+  image: string
+}
+
+export interface Order {
+  id: string
+  session_id: string | null
+  items: OrderItem[]
+  total: number
+  status: 'pending' | 'confirmed' | 'shipped' | 'completed' | 'cancelled'
+  created_at: string
+  updated_at: string
+}

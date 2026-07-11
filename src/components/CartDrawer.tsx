@@ -1,7 +1,9 @@
 'use client'
 
-import { X, ShoppingCart, Trash2, Plus, Minus, CreditCard } from 'lucide-react'
+import { useState } from 'react'
+import { X, ShoppingCart, Trash2, Plus, Minus, CreditCard, CheckCircle, AlertCircle } from 'lucide-react'
 import { useCartStore, selectCartCount, selectCartTotal } from '@/store/useCartStore'
+import { getSessionId } from '@/lib/session'
 
 /** Format VND currency */
 function formatVND(amount: number): string {
@@ -22,6 +24,45 @@ export default function CartDrawer() {
 
   const totalCount = useCartStore(selectCartCount)
   const totalPrice = useCartStore(selectCartTotal)
+
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+
+  const handleCheckout = async () => {
+    setCheckoutLoading(true)
+    setCheckoutError(null)
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: getSessionId(),
+          items: items.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            brand: item.brand,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error ?? 'Đặt hàng thất bại')
+      }
+
+      clearCart()
+      setCheckoutSuccess(true)
+    } catch (err) {
+      setCheckoutError(err instanceof Error ? err.message : 'Đặt hàng thất bại')
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -135,19 +176,46 @@ export default function CartDrawer() {
         </div>
 
         {/* Footer / checkout */}
-        {items.length > 0 && (
+        {items.length > 0 && !checkoutSuccess && (
           <div className="cart-footer">
             <div className="cart-total-row">
               <span className="text-gray-400 text-sm">Tổng cộng</span>
               <span className="cart-total-price">{formatVND(totalPrice)}</span>
             </div>
-            <button className="cart-checkout-btn" id="checkout-btn">
+            {checkoutError && (
+              <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                <AlertCircle size={14} />
+                {checkoutError}
+              </div>
+            )}
+            <button
+              className="cart-checkout-btn"
+              id="checkout-btn"
+              onClick={handleCheckout}
+              disabled={checkoutLoading}
+            >
               <CreditCard size={16} />
-              Thanh toán ({totalCount} sản phẩm)
+              {checkoutLoading ? 'Đang xử lý...' : `Thanh toán (${totalCount} sản phẩm)`}
             </button>
             <p className="text-center text-xs text-gray-500 mt-2">
               * Demo MVP — thanh toán thực chưa được tích hợp
             </p>
+          </div>
+        )}
+
+        {checkoutSuccess && (
+          <div className="cart-footer">
+            <div className="flex flex-col items-center gap-2 py-4">
+              <CheckCircle size={40} className="text-green-400" />
+              <p className="text-sm font-semibold text-green-400">Đặt hàng thành công!</p>
+              <p className="text-xs text-gray-400">Đơn hàng của bạn đang được xử lý.</p>
+              <button
+                onClick={() => setCheckoutSuccess(false)}
+                className="mt-2 px-4 py-2 text-xs font-medium bg-surface-container border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-high transition-colors"
+              >
+                Tiếp tục mua sắm
+              </button>
+            </div>
           </div>
         )}
       </aside>
