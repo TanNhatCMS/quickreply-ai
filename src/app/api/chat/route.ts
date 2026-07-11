@@ -185,25 +185,8 @@ export async function POST(req: Request) {
 
   // ── Discover skills ───────────────────────────────────────────────────
   const skills = await discoverSkills([
-    'phongvu-ai-agent/skills/phongvu-sales-agent',
+    'src/skills/phongvu-sales-agent',
   ])
-
-  // ── Connect to Phong Vũ MCP server ──────────────────────────────────
-  let mcpClient: Awaited<ReturnType<typeof createMCPClient>> | null = null
-  let mcpTools: Record<string, unknown> = {}
-
-  try {
-    mcpClient = await createMCPClient({
-      transport: new StdioClientTransport({
-        command: 'node',
-        args: ['phongvu-ai-agent/mcp-server/index.js'],
-      }),
-    })
-    mcpTools = await mcpClient.tools()
-    console.log('[chat/route] MCP tools loaded:', Object.keys(mcpTools))
-  } catch (err) {
-    console.error('[chat/route] MCP connection failed:', err)
-  }
 
   // Stream with Vercel AI SDK v7
   const result = streamText({
@@ -214,7 +197,7 @@ export async function POST(req: Request) {
     maxRetries: 3,
 
     tools: {
-      ...mcpTools,
+      ...phongvuTools,
 
       // Skill loader — loads full SKILL.md instructions on demand
       loadSkill: tool({
