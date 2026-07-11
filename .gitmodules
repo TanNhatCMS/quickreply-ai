@@ -1,0 +1,3 @@
+[submodule "phongvu-ai-agent"]
+	path = phongvu-ai-agent
+	url = https://github.com/TanNhatCMS/phongvu-ai-agent
