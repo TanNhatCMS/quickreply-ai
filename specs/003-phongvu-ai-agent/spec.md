@@ -1,6 +1,6 @@
 # Feature Specification: Phong Vu AI Agent (Skills & Tools)
 
-**Feature Branch**: `002-phongvu-ai-agent`
+**Feature Branch**: `003-phongvu-ai-agent`
 
 **Created**: 2026-07-12
 
