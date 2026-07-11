@@ -14,6 +14,9 @@
 
 - Q: How should the shopping cart state be synchronized between the Next.js storefront and the AI Chat Widget? → A: LocalStorage/Zustand client-side state store synchronized via local storage and custom events (Option C).
 - Q: Which Vector Database or search mechanism should be used for RAG? → A: PostgreSQL with pgvector via Supabase (Option A).
+- Q: How should API rate-limiting and abuse protection for the LLM chat widget endpoint be handled? → A: No rate-limiting for MVP, deferred to Vercel deployment settings (Option C).
+- Q: How are users/sessions identified to maintain their respective chat history and cart? → A: Anonymous session cookies/UUIDs generated on first load (no login required for MVP) (Option A).
+- Q: What is the fallback behavior when the RAG database search fails or the LLM is unavailable? → A: Silently retry the request up to 3 times before displaying a generic error message (Option C).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -65,6 +68,7 @@ As a customer, I want to be able to add a recommended product to my shopping car
 - What happens when a recommended product is out of stock?
 - How does the system handle network latency during RAG queries to prevent UI freezing?
 - What happens when the user clicks "Add to Cart" multiple times or adjusts quantities from the chat card?
+- What happens when the RAG database search fails or the LLM is unavailable? → The system will silently retry the request up to 3 times before displaying a generic error message.
 
 ## Requirements *(mandatory)*
 
@@ -75,11 +79,14 @@ As a customer, I want to be able to add a recommended product to my shopping car
 - **FR-003**: System MUST implement tool calling using Vercel AI SDK Core.
 - **FR-004**: System MUST use @ai-sdk/elements or custom UI components to stream interactive React components (Product Cards, Add to Cart buttons) into the chat stream.
 - **FR-005**: System MUST sync the shopping cart state between the chat widget and the storefront UI using a client-side Zustand store persisted in LocalStorage and synchronized via custom events.
+- **FR-006**: System MUST track user chat history and session cart state using an anonymous session UUID stored in cookies/localStorage.
+- **FR-007**: System MUST retry failed RAG searches or LLM requests up to 3 times silently before returning a generic user-facing error message.
 
 ### Key Entities
 
 - **Product**: Represents hardware items sold, with attributes like ID, Name, Brand, Specifications, Price, and Stock Status.
 - **Cart**: Represents the customer's active shopping cart, managed client-side using Zustand and persisted in LocalStorage, containing items, quantities, and total price.
+- **Session**: Represents an anonymous user session tracked via a client-generated UUID cookie or local storage key.
 
 ## Success Criteria *(mandatory)*
 
@@ -93,3 +100,4 @@ As a customer, I want to be able to add a recommended product to my shopping car
 
 - Storefront mockup uses Next.js App Router for frontend layout.
 - RAG knowledge base data is static or updated periodically.
+- API rate-limiting on the LLM/chat endpoints is out of scope for the MVP and deferred to Vercel deployment/platform-level settings.

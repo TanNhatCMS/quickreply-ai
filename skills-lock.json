@@ -49,6 +49,12 @@
       "skillPath": "skills/frontend-skill/SKILL.md",
       "computedHash": "8ab39f3d248fc0eb5bd3850b0016145cf2a7bbc71c1ee958db9505d8a509b701"
     },
+    "karpathy-guidelines": {
+      "source": "multica-ai/andrej-karpathy-skills",
+      "sourceType": "github",
+      "skillPath": "skills/karpathy-guidelines/SKILL.md",
+      "computedHash": "0ec1641120accbb458780e0bd19a50a4182f2b97863e90851b91307f29802c9f"
+    },
     "next-cache-components-adoption": {
       "source": "vercel/next.js",
       "sourceType": "github",
