@@ -73,6 +73,73 @@
   --radius-full: 9999px;
 }
 
+.theme-titanium {
+  --color-primary: #003b73;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #00529c;
+  --color-on-primary-container: #a5c7ff;
+  --color-secondary: #006688;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #00c1fd;
+  --color-on-secondary-container: #004b65;
+  --color-tertiary: #652900;
+  --color-tertiary-container: #893b01;
+  --color-on-tertiary-container: #ffb58e;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-surface: #f9f9ff;
+  --color-surface-dim: #d9dae0;
+  --color-surface-bright: #f9f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f3fa;
+  --color-surface-container: #ededf4;
+  --color-surface-container-high: #e7e8ef;
+  --color-surface-container-highest: #e1e2e9;
+  --color-surface-tint: #1d5fa9;
+  --color-surface-variant: #e1e2e9;
+  --color-on-surface: #191c21;
+  --color-on-surface-variant: #424751;
+  --color-inverse-surface: #2e3036;
+  --color-inverse-on-surface: #f0f0f7;
+  --color-inverse-primary: #a7c8ff;
+  --color-outline: #727782;
+  --color-outline-variant: #c2c6d3;
+  --color-background: #f9f9ff;
+  --color-on-background: #191c21;
+  --color-promo-orange: #FFA940;
+  --color-alert-red: #E63946;
+  --color-success-green: #2ECC71;
+  --color-surface-blue: #F0F5FA;
+  --font-headline-xl: 'Hanken Grotesk', sans-serif;
+  --font-headline-lg: 'Hanken Grotesk', sans-serif;
+  --font-headline-lg-mobile: 'Hanken Grotesk', sans-serif;
+  --font-title-md: 'Hanken Grotesk', sans-serif;
+  --font-price-major: 'Hanken Grotesk', sans-serif;
+  --font-body-lg: 'Inter', sans-serif;
+  --font-body-sm: 'Inter', sans-serif;
+  --font-label-spec: 'JetBrains Mono', monospace;
+  --text-headline-xl: 3rem;
+  --text-headline-lg: 2rem;
+  --text-headline-lg-mobile: 1.5rem;
+  --text-title-md: 1.125rem;
+  --text-body-lg: 1rem;
+  --text-body-sm: 0.875rem;
+  --text-label-spec: 0.75rem;
+  --text-price-major: 1.375rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-margin-edge: 2rem;
+  --spacing-stack-sm: 0.5rem;
+  --spacing-stack-md: 1rem;
+  --spacing-stack-lg: 2.5rem;
+  --spacing-container-max: 1280px;
+}
+
+.theme-titanium {
+  font-family: var(--font-body-lg);
+}
+
 /* ─── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -783,3 +850,6 @@ body {
   transition: all 0.2s;
 }
 .cart-checkout-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--indigo-glow); }
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
