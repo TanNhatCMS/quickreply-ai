@@ -135,28 +135,58 @@ export default function ChatWidget() {
       // MCP: search_products → Product cards
       if (toolName === 'search_products') {
         const { products, total } = output as SearchProductsResult
-        if (!products?.length) return <p className="text-sm text-gray-400">Không tìm thấy sản phẩm phù hợp.</p>
+        if (!products?.length) return <p className="text-sm text-outline">Không tìm thấy sản phẩm phù hợp.</p>
 
         return (
           <div className="flex flex-col gap-2 mt-1">
-            <p className="text-xs text-gray-400">{total} sản phẩm tìm thấy</p>
+            <p className="text-xs text-outline">{total} sản phẩm tìm thấy</p>
             {products.map((p) => (
-              <a key={p.sku} href={p.url} target="_blank" rel="noopener noreferrer" className="product-card-link">
-                <div className="product-card-mcp">
-                  {p.image && <img src={p.image} alt={p.name} className="product-card-img" />}
-                  <div className="product-card-info">
-                    <p className="product-card-brand">{p.brand}</p>
-                    <p className="product-card-name">{p.name}</p>
-                    <div className="product-card-price-row">
-                      <span className="product-card-price">{p.priceFormatted}</span>
-                      {p.discount > 0 && <span className="product-card-discount">-{p.discount}%</span>}
+              <div key={p.sku} className="bg-white rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+                <div className="p-3 flex gap-3">
+                  {p.image && (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-16 h-16 object-contain bg-surface rounded-lg flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wide">{p.brand}</p>
+                    <p className="text-xs font-semibold text-on-surface line-clamp-2 leading-snug mt-0.5">{p.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm font-bold text-error">{p.priceFormatted}</span>
+                      {p.discount > 0 && (
+                        <span className="text-[10px] font-bold bg-error/10 text-error px-1.5 py-0.5 rounded-full">
+                          -{p.discount}%
+                        </span>
+                      )}
                     </div>
-                    <p className={`product-card-stock ${p.inStock ? 'in-stock' : 'out-of-stock'}`}>
-                      {p.inStock ? 'Còn hàng' : 'Hết hàng'}
+                    <p className={`text-[10px] mt-0.5 font-medium ${p.inStock ? 'text-success-green' : 'text-error'}`}>
+                      {p.inStock ? '● Còn hàng' : '○ Hết hàng'}
                     </p>
                   </div>
                 </div>
-              </a>
+                <div className="px-3 pb-3 flex gap-2">
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-1.5 text-center text-xs font-semibold border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors"
+                  >
+                    Xem chi tiết
+                  </a>
+                  <button
+                    onClick={() => {
+                      addItem({ productId: p.sku, name: p.name, brand: p.brand, price: p.priceCurrent ?? 0, image: p.image }, 1)
+                      toggleDrawer(true)
+                    }}
+                    disabled={!p.inStock}
+                    className="flex-1 py-1.5 text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Thêm giỏ hàng
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )
