@@ -239,12 +239,6 @@ export async function POST(req: Request) {
     onError: ({ error }) => {
       console.error('[chat/route] streamText error:', error)
     },
-
-    onFinish: () => {
-      // MCP client (stdio subprocess) must stay alive until the stream —
-      // and any tool calls issued during it — has fully finished.
-      mcpClient?.close().catch(() => { })
-    },
   })
 
   const response = result.toUIMessageStreamResponse()
