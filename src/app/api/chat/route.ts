@@ -1,40 +1,42 @@
 import { openai } from '@ai-sdk/openai'
+import { createMCPClient } from '@ai-sdk/mcp'
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from 'ai'
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { z } from 'zod'
-import { retrieveContext, formatContextForPrompt, queryDocuments } from '@/lib/rag'
 import { supabase } from '@/lib/supabase'
 
 // Allow up to 30 seconds for streaming on Vercel Edge
 export const maxDuration = 30
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
-// ─── System prompt factory ─────────────────────────────────────────────────
+// ─── System prompt ─────────────────────────────────────────────────────────
 
-function buildSystemPrompt(ragContext: string): string {
-  return `Bạn là QuickReply AI — trợ lý tư vấn bán hàng thông minh của Phong Vũ, chuyên về sản phẩm công nghệ.
+const SYSTEM_PROMPT = `Bạn là QuickReply AI — trợ lý tư vấn bán hàng thông minh của Phong Vũ (phongvu.vn).
 
-**Vai trò của bạn:**
-- Tư vấn sản phẩm laptop, máy tính, phụ kiện dựa trên nhu cầu khách hàng
-- Cung cấp thông tin chính xác về thông số kỹ thuật, giá cả, khuyến mãi, bảo hành
-- Giúp khách hàng so sánh và lựa chọn sản phẩm phù hợp
-- Hỗ trợ thêm sản phẩm vào giỏ hàng khi được yêu cầu
+**Vai trò:** Tư vấn sản phẩm điện tử, so sánh, tìm khuyến mãi, kiểm tra tồn kho, thêm vào giỏ hàng.
 
 **Nguyên tắc:**
 - Luôn trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp
-- Chỉ tư vấn dựa trên thông tin thực tế từ cơ sở dữ liệu
-- Khi cần tìm thông tin, gọi tool \`searchKnowledge\` để tra cứu
-- Khi khách muốn thêm giỏ hàng, gọi tool \`addToCart\`
-- Không bịa đặt thông tin
+- Giá hiển thị VND có dấu phân cách (VD: 28,290,000đ)
+- Link mua: luôn kèm https://phongvu.vn/{canonical}
+- Khuyến mãi: highlight bằng emoji hoặc in đậm
+- Specs: dùng bullet points, ngắn gọn
+- So sánh: dùng bảng markdown
+- Sau mỗi trả lời, gợi ý hành động tiếp theo
 
-**Dữ liệu ngữ cảnh liên quan đến yêu cầu hiện tại:**
-${ragContext}
+**Tools có sẵn:**
+- search_products: tìm kiếm sản phẩm theo từ khóa, lọc giá/brand/attributes
+- get_product_detail: chi tiết sản phẩm theo SKU
+- compare_products: so sánh 2-3 sản phẩm
+- get_recommendations: sản phẩm gợi ý liên quan
+- check_stock: kiểm tra tồn kho
+- get_popular_keywords: từ khóa phổ biến
+- addToCart: thêm vào giỏ hàng (client-side)
 `
-}
 
 // ─── Trace helpers ─────────────────────────────────────────────────────────
 
 async function ensureSession(sessionId: string, userAgent?: string) {
-  // Upsert session — create if not exists
   await supabase.from('chat_sessions').upsert(
     { id: sessionId, user_agent: userAgent ?? null },
     { onConflict: 'id', ignoreDuplicates: true },
@@ -82,12 +84,11 @@ export async function POST(req: Request) {
     })
   }
 
-  // Ensure session exists for trace
   const sid = sessionId ?? crypto.randomUUID()
   const userAgent = req.headers.get('user-agent') ?? undefined
   await ensureSession(sid, userAgent)
 
-  // Get the latest user message text for RAG retrieval
+  // Get latest user message for trace
   const latestUserMessage =
     [...messages]
       .reverse()
@@ -96,98 +97,55 @@ export async function POST(req: Request) {
       .map((p) => p.text)
       .join(' ') ?? ''
 
-  // Save user message trace
   await saveTrace({ sessionId: sid, role: 'user', content: latestUserMessage })
 
-  // Retrieve relevant context from Supabase
-  let ragContext = ''
-  try {
-    const ctx = await retrieveContext(latestUserMessage)
-    ragContext = formatContextForPrompt(ctx)
-  } catch (err) {
-    console.warn('[chat/route] RAG retrieval failed, continuing without context:', err)
-    ragContext = 'Không thể tải thông tin lúc này.'
-  }
+  // ── Connect to Phong Vũ MCP server ──────────────────────────────────
+  const mcpClient = await createMCPClient({
+    transport: new StdioClientTransport({
+      command: 'node',
+      args: ['phongvu-ai-agent/mcp-server/index.js'],
+    }),
+  })
+
+  const mcpTools = await mcpClient.tools()
 
   // Stream with Vercel AI SDK v7
   const result = streamText({
     model: openai('gpt-4o-mini'),
-    system: buildSystemPrompt(ragContext),
+    system: SYSTEM_PROMPT,
     messages: await convertToModelMessages(messages),
-    maxOutputTokens: 1024,
+    maxOutputTokens: 2048,
     maxRetries: 3,
 
-    // ── Tool definitions ────────────────────────────────────────────────
     tools: {
-      /**
-       * searchKnowledge — search the RAG knowledge base for relevant information.
-       * Covers products, policies, warranty, payment, delivery, promotions, FAQ.
-       */
-      searchKnowledge: tool({
-        description:
-          'Tìm kiếm thông tin từ cơ sở dữ liệu kiến thức. Dùng khi khách hỏi về sản phẩm, chính sách, bảo hành, khuyến mãi, giao hàng, thanh toán, hoặc bất kỳ thông tin nào về Phong Vũ.',
-        inputSchema: z.object({
-          query: z.string().describe('Câu hỏi hoặc từ khóa tìm kiếm (tiếng Việt)'),
-          category: z
-            .enum(['company', 'policy', 'warranty', 'payment', 'delivery', 'faq', 'service', 'legal'])
-            .optional()
-            .describe('Lọc theo danh mục (tùy chọn)'),
-          maxResults: z
-            .number()
-            .int()
-            .min(1)
-            .max(10)
-            .optional()
-            .default(5)
-            .describe('Số lượng kết quả tối đa'),
-        }),
-        execute: async ({ query, category, maxResults }) => {
-          const docs = await queryDocuments(query, {
-            matchCount: maxResults,
-            category,
-          })
-          return {
-            documents: docs.map((d) => ({
-              title: d.title,
-              content: d.content,
-              category: d.category,
-            })),
-          }
-        },
-      }),
+      ...mcpTools,
 
-      /**
-       * addToCart — client-side tool: no server execute().
-       * ChatWidget handles via onToolCall + addToolOutput.
-       */
+      // Client-side tool: addToCart (no server execute)
       addToCart: tool({
         description:
           'Thêm một sản phẩm vào giỏ hàng của khách. Chỉ dùng khi khách hàng yêu cầu rõ ràng muốn mua hoặc thêm vào giỏ.',
         inputSchema: z.object({
-          productId: z.string().describe('ID sản phẩm (UUID từ database)'),
+          productId: z.string().describe('ID sản phẩm'),
           name: z.string().describe('Tên sản phẩm'),
           brand: z.string().describe('Thương hiệu'),
           price: z.number().describe('Giá bán (VND)'),
-          image: z.string().optional().default('').describe('URL hình ảnh sản phẩm'),
+          image: z.string().optional().default('').describe('URL hình ảnh'),
           quantity: z.number().int().min(1).optional().default(1),
         }),
       }),
     },
 
-    // Allow LLM to call tools for up to 3 steps before final response
-    stopWhen: stepCountIs(3),
+    stopWhen: stepCountIs(5),
 
-    // Silent retry handled via maxRetries above + Vercel edge
     onError: ({ error }) => {
       console.error('[chat/route] streamText error:', error)
     },
   })
 
-  // Save assistant trace after stream completes (fire-and-forget)
-  const responsePromise = result.toUIMessageStreamResponse()
+  const response = result.toUIMessageStreamResponse()
   const latencyMs = Date.now() - startTime
 
-  // Fire-and-forget trace save
+  // Fire-and-forget trace
   saveTrace({
     sessionId: sid,
     role: 'assistant',
@@ -196,5 +154,8 @@ export async function POST(req: Request) {
     latencyMs,
   }).catch(() => {})
 
-  return responsePromise
+  // Close MCP client after response
+  mcpClient.close().catch(() => {})
+
+  return response
 }
