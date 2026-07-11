@@ -84,9 +84,10 @@ As a customer, I want to be able to add a recommended product to my shopping car
 
 ### Key Entities
 
-- **Product**: Represents hardware items sold, with attributes like ID, Name, Brand, Specifications, Price, and Stock Status.
+- **Document**: RAG knowledge base chunk sourced from `help.phongvu.vn/llms-full.txt`, with attributes like ID, Title, Content, Category, Metadata, and Embedding (vector 1536).
+- **ChatSession**: Tracks each AI consultation session for dashboard tracing, with attributes like ID, User Agent, Started At, Ended At, and Metadata.
+- **ChatMessage**: Persists every message in a session with trace metadata (tokens used, latency, model, tool calls) for dashboard replay.
 - **Cart**: Represents the customer's active shopping cart, managed client-side using Zustand and persisted in LocalStorage, containing items, quantities, and total price.
-- **Session**: Represents an anonymous user session tracked via a client-generated UUID cookie or local storage key.
 
 ## Success Criteria *(mandatory)*
 

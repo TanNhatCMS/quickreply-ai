@@ -1,90 +1,101 @@
-# Data Model: QuickReply AI Storefront
+# Data Model: QuickReply AI
 
-This document outlines the database schema in Supabase (PostgreSQL with `pgvector`) and the client-side state models for the mockup storefront shopping cart.
+This document outlines the database schema in Supabase (PostgreSQL with `pgvector`) for RAG knowledge base and chat trace history, plus the client-side state models.
 
 ---
 
 ## 1. Relational Database Schema (Supabase / Postgres)
 
-### `products` Table
-Stores the catalogue of hardware items available in the storefront.
+### `documents` Table
+RAG knowledge base — stores chunked content from `help.phongvu.vn/llms-full.txt` for semantic search.
 
 | Column | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `id` | `uuid` | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique product ID. |
-| `name` | `text` | NOT NULL | Product display name. |
-| `brand` | `text` | NOT NULL | Manufacturer (e.g., ASUS, Dell, Apple). |
-| `price` | `numeric(12,2)` | NOT NULL, CHECK (price >= 0) | Selling price in VND. |
-| `specifications` | `jsonb` | NOT NULL | JSON dictionary of CPU, RAM, Storage, GPU, Screen. |
-| `stock` | `integer` | NOT NULL, DEFAULT 0, CHECK (stock >= 0) | Quantity available. |
-| `embedding` | `vector(1536)` | NULL | Vector embedding of product specs for semantic search. |
-| `created_at` | `timestamptz` | DEFAULT now() | Record creation date. |
+| `id` | `uuid` | PRIMARY KEY, DEFAULT gen_random_uuid() | Document ID. |
+| `title` | `text` | NOT NULL | Section/chunk title. |
+| `content` | `text` | NOT NULL | Full text content of the chunk. |
+| `category` | `text` | NOT NULL, CHECK (IN company/policy/warranty/payment/delivery/faq/service/legal) | Document category. |
+| `source_url` | `text` | NULL | Original source URL. |
+| `metadata` | `jsonb` | NOT NULL, DEFAULT '{}' | Additional metadata (brand, tags, discount, etc.). |
+| `embedding` | `vector(1536)` | NULL | OpenAI text-embedding-3-small vector for semantic search. |
+| `created_at` | `timestamptz` | NOT NULL, DEFAULT now() | Record creation date. |
+| `updated_at` | `timestamptz` | NOT NULL, DEFAULT now() | Last update (auto-updated via trigger). |
 
-*Index*: `CREATE INDEX ON products USING hnsw (embedding vector_cosine_ops);` for fast vector search.
+*Indexes*:
+- `CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops)` — fast vector search.
+- `CREATE INDEX ON documents (category)` — filtered queries by category.
 
 ---
 
-### `promotions` Table
-Stores running marketing campaigns and discounts.
+### `chat_sessions` Table
+Tracks each chat consultation session for dashboard tracing.
 
 | Column | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `id` | `uuid` | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique promotion ID. |
-| `title` | `text` | NOT NULL | Campaign name. |
-| `description` | `text` | NOT NULL | Description of the offer. |
-| `discount_percentage` | `numeric(5,2)` | CHECK (discount_percentage >= 0 AND discount_percentage <= 100) | Discount amount. |
-| `start_date` | `timestamptz` | NOT NULL | Start of promotion period. |
-| `end_date` | `timestamptz` | NOT NULL | End of promotion period. |
-| `embedding` | `vector(1536)` | NULL | Vector embedding of promotion text. |
-
-*Index*: `CREATE INDEX ON promotions USING hnsw (embedding vector_cosine_ops);`
-
----
-
-### `warranty_policies` Table
-Stores warranty rules for brand products.
-
-| Column | Type | Constraints | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | `uuid` | PRIMARY KEY, DEFAULT gen_random_uuid() | Unique policy ID. |
-| `brand` | `text` | NOT NULL, UNIQUE | Associated hardware brand. |
-| `policy_details` | `text` | NOT NULL | Detailed text describing coverage, exceptions, and centers. |
-| `duration_months` | `integer` | NOT NULL, CHECK (duration_months >= 0) | Warranty term. |
-| `embedding` | `vector(1536)` | NULL | Vector embedding of the policy details. |
-
-*Index*: `CREATE INDEX ON warranty_policies USING hnsw (embedding vector_cosine_ops);`
+| `id` | `uuid` | PRIMARY KEY, DEFAULT gen_random_uuid() | Session ID (matches client-side anonymous UUID). |
+| `user_agent` | `text` | NULL | Browser user agent string. |
+| `started_at` | `timestamptz` | NOT NULL, DEFAULT now() | Session start time. |
+| `ended_at` | `timestamptz` | NULL | Session end time. |
+| `metadata` | `jsonb` | NOT NULL, DEFAULT '{}' | Extra context (referrer, page URL, etc.). |
 
 ---
 
 ### `chat_messages` Table
-Persists user chat conversations associated with anonymous sessions.
+Persists every message in a chat session with trace metadata for dashboard replay.
 
 | Column | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | `uuid` | PRIMARY KEY, DEFAULT gen_random_uuid() | Message ID. |
-| `session_id` | `uuid` | NOT NULL | Link to anonymous user session identifier. |
-| `role` | `text` | NOT NULL, CHECK (role IN ('user', 'assistant')) | Message author role. |
-| `content` | `text` | NOT NULL | Text content. |
-| `tool_calls` | `jsonb` | DEFAULT '[]'::jsonb | Store structural metadata of tools called. |
-| `created_at` | `timestamptz` | DEFAULT now() | Message time. |
+| `session_id` | `uuid` | NOT NULL, FK → chat_sessions.id (ON DELETE CASCADE) | Parent session. |
+| `role` | `text` | NOT NULL, CHECK (role IN ('user', 'assistant', 'system', 'tool')) | Message author role. |
+| `content` | `text` | NOT NULL | Message text content. |
+| `tool_calls` | `jsonb` | NOT NULL, DEFAULT '[]' | Tool invocations (name, args, result). |
+| `tokens_used` | `integer` | NULL, CHECK (>= 0) | Token count for this message. |
+| `latency_ms` | `integer` | NULL, CHECK (>= 0) | Response latency in milliseconds. |
+| `model` | `text` | NULL | Model used (e.g., gpt-4o-mini). |
+| `created_at` | `timestamptz` | NOT NULL, DEFAULT now() | Message timestamp. |
 
-*Index*: `CREATE INDEX ON chat_messages (session_id, created_at ASC);`
+*Index*: `CREATE INDEX ON chat_messages (session_id, created_at ASC)` — ordered session replay.
 
 ---
 
-## 2. Client-Side Store State (Zustand & LocalStorage)
+## 2. Row Level Security (RLS)
+
+- **documents**: Public read (RAG queries run server-side, but anon read allowed for flexibility).
+- **chat_sessions**: Anon can insert and read (session creation + dashboard access).
+- **chat_messages**: Anon can insert and read (trace saving + dashboard replay).
+
+---
+
+## 3. RPC Functions
+
+### `match_documents`
+Vector similarity search with optional category filter.
+
+```sql
+match_documents(
+  query_embedding vector(1536),
+  match_threshold float DEFAULT 0.4,
+  match_count int DEFAULT 5,
+  filter_category text DEFAULT NULL
+) → TABLE (id, title, content, category, metadata, similarity)
+```
+
+---
+
+## 4. Client-Side Store State (Zustand & LocalStorage)
 
 ### Cart Item State
 Represents a single product added to the cart, stored client-side.
 
 ```typescript
 interface CartItem {
-  productId: string; // Maps to products.id
-  name: string;      // Product name
-  price: number;     // Selling price
-  brand: string;     // Brand
-  quantity: number;  // Selected amount
-  image: string;     // Mockup image URL
+  productId: string;
+  name: string;
+  price: number;
+  brand: string;
+  quantity: number;
+  image: string;
 }
 ```
 
@@ -94,9 +105,8 @@ The Zustand global store interface managed on the client storefront.
 ```typescript
 interface CartState {
   items: CartItem[];
-  isOpen: boolean; // Controls whether CartDrawer is visible
-  
-  // Actions
+  isOpen: boolean;
+
   addItem: (product: Omit<CartItem, 'quantity'>, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -104,4 +114,5 @@ interface CartState {
   toggleDrawer: (open?: boolean) => void;
 }
 ```
-*Persistence*: The Zustand store will use the `persist` middleware configured with the name `phongvu-cart-store` to save/restore from `localStorage`.
+
+*Persistence*: Zustand `persist` middleware with name `phongvu-cart-store` → `localStorage`.

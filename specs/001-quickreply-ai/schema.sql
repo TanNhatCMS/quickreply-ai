@@ -1,0 +1,7 @@
+-- ============================================================
+-- DEPRECATED: Schema has moved to supabase/migrations/
+-- See: supabase/migrations/20260711000000_initial_schema.sql
+-- ============================================================
+-- This file is kept for reference only.
+-- The canonical schema is in the supabase/ folder for
+-- GitHub integration branching support.

@@ -14,9 +14,9 @@
 
 **Purpose**: Project initialization and basic workspace structure.
 
-- [ ] T001 Create project directories `src/app`, `src/components`, `src/store`, `src/lib`, and `tests/`
-- [ ] T002 Initialize package.json and install Next.js, Vercel AI SDK Core (`ai`), `@ai-sdk/openai`, `@ai-sdk/elements`, `zustand`, `@supabase/supabase-js`, `lucide-react`, and dev dependencies (`vitest`, `playwright`)
-- [ ] T003 [P] Configure environment variables and TypeScript configurations in `.env.local` and `tsconfig.json`
+- [x] T001 Create project directories `src/app`, `src/components`, `src/store`, `src/lib`, and `tests/`
+- [x] T002 Initialize package.json and install Next.js, Vercel AI SDK Core (`ai`), `@ai-sdk/openai`, `@ai-sdk/elements`, `zustand`, `@supabase/supabase-js`, `lucide-react`, and dev dependencies (`vitest`, `playwright`)
+- [x] T003 [P] Configure environment variables and TypeScript configurations in `.env.local` and `tsconfig.json`
 
 ---
 
@@ -26,11 +26,11 @@
 
 **⚠️ CRITICAL**: No user story implementation can begin until this phase is complete.
 
-- [ ] T004 Create database table schemas with pgvector extension enabled for products, promotions, and warranty policies in Supabase SQL editor
-- [ ] T005 [P] Seed the Supabase database tables with mock Phong Vu hardware specifications, warranties, and promotions
-- [ ] T006 Create the Supabase client initialization wrapper in `src/lib/supabase.ts`
-- [ ] T007 Implement the client-side Zustand store for cart management in `src/store/useCartStore.ts` with LocalStorage persistence
-- [ ] T008 Implement anonymous session UUID helper in `src/lib/session.ts`
+- [x] T004 Create database table schemas with pgvector extension enabled for products, promotions, and warranty policies in Supabase SQL editor
+- [x] T005 [P] Seed the Supabase database tables with mock Phong Vu hardware specifications, warranties, and promotions
+- [x] T006 Create the Supabase client initialization wrapper in `src/lib/supabase.ts`
+- [x] T007 Implement the client-side Zustand store for cart management in `src/store/useCartStore.ts` with LocalStorage persistence
+- [x] T008 Implement anonymous session UUID helper in `src/lib/session.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin.
 
@@ -44,12 +44,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [P] [US1] Create the RAG querying helper in `src/lib/rag.ts` that builds vector query embeddings and retrieves matches from Supabase
-- [ ] T010 [US1] Implement chat streaming API route in `src/app/api/chat/route.ts` using `@ai-sdk/openai` and Vercel AI SDK Core
-- [ ] T011 [US1] Create chat widget UI component using `@ai-sdk/elements` in `src/components/ChatWidget.tsx`
-- [ ] T012 [US1] Integrate anonymous session UUID into `src/components/ChatWidget.tsx` payloads sent to the chat API
-- [ ] T013 [US1] Create mock storefront shell layout in `src/app/page.tsx` and embed the chat widget
-- [ ] T014 [US1] Implement unit tests for RAG queries in `tests/unit/rag.test.ts`
+- [x] T009 [P] [US1] Create the RAG querying helper in `src/lib/rag.ts` that builds vector query embeddings and retrieves matches from Supabase
+- [x] T010 [US1] Implement chat streaming API route in `src/app/api/chat/route.ts` using `@ai-sdk/openai` and Vercel AI SDK Core
+- [x] T011 [US1] Create chat widget UI component using `@ai-sdk/react` in `src/components/ChatWidget.tsx`
+- [x] T012 [US1] Integrate anonymous session UUID into `src/components/ChatWidget.tsx` payloads sent to the chat API
+- [x] T013 [US1] Create mock storefront shell layout in `src/app/page.tsx` and embed the chat widget
+- [x] T014 [US1] Implement unit tests for RAG queries and useCartStore in `tests/rag.test.ts` and `tests/useCartStore.test.ts`
 
 **Checkpoint**: At this point, the core RAG Conversational Sales Agent is fully functional.
 
@@ -63,9 +63,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T015 [P] [US2] Create interactive product card component in `src/components/ProductCard.tsx`
-- [ ] T016 [US2] Register `queryProducts` tool inside the LLM orchestrator in `src/app/api/chat/route.ts`
-- [ ] T017 [US2] Stream and render `ProductCard` components inside the `ChatWidget.tsx` message feed via tool calling UI handlers
+- [x] T015 [P] [US2] Create interactive product card component in `src/components/ProductCard.tsx`
+- [x] T016 [US2] Register `queryProducts` tool inside the LLM orchestrator in `src/app/api/chat/route.ts`
+- [x] T017 [US2] Stream and render `ProductCard` components inside the `ChatWidget.tsx` message feed via tool calling UI handlers
 - [ ] T018 [US2] Implement unit tests for the `ProductCard` component in `tests/unit/ProductCard.test.ts`
 
 **Checkpoint**: At this point, interactive component streaming is complete.
@@ -80,10 +80,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Connect `ProductCard.tsx` Add to Cart button click handler to `useCartStore.ts` action triggers
-- [ ] T020 [US3] Register the `addToCartTrigger` tool inside `src/app/api/chat/route.ts` to allow programmatic adding via text
-- [ ] T021 [US3] Create slide-out cart panel in `src/components/CartDrawer.tsx` connected to the storefront page layout
-- [ ] T022 [US3] Add client-side tool execution listener for `addToCartTrigger` in `src/components/ChatWidget.tsx`
+- [x] T019 [US3] Connect `ProductCard.tsx` Add to Cart button click handler to `useCartStore.ts` action triggers
+- [x] T020 [US3] Register the `addToCart` tool inside `src/app/api/chat/route.ts` to allow programmatic adding via text
+- [x] T021 [US3] Create slide-out cart panel in `src/components/CartDrawer.tsx` connected to the storefront page layout
+- [x] T022 [US3] Add client-side tool execution listener for `addToCart` in `src/components/ChatWidget.tsx`
 - [ ] T023 [US3] Write E2E verification test for cart synchronization in `tests/e2e/cart-sync.spec.ts`
 
 **Checkpoint**: Storefront cart synchronization with the agent stream is fully complete.
@@ -94,9 +94,9 @@
 
 **Purpose**: Error resiliency and final integration sanity tests.
 
-- [ ] T024 Implement LLM error handling and 3x silent retry loop in `src/components/ChatWidget.tsx`
+- [x] T024 Implement LLM error handling and 3x silent retry loop in `src/app/api/chat/route.ts` (via `maxRetries: 3`) and `src/components/ChatWidget.tsx` (via `onError` callback)
 - [ ] T025 Update documentation and environment variable definitions in `README.md`
-- [ ] T026 Perform final verification run using `quickstart.md` guidelines
+- [x] T026 Perform final verification run using `quickstart.md` guidelines
 
 ---
 
