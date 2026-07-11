@@ -19,7 +19,7 @@
 
 # env files (can opt-in for committing if needed)
 .env*
-!.env.local.example
+!.env.example
 
 # vercel
 .vercel
@@ -62,4 +62,3 @@ Thumbs.db
 /.mimocode
 /tmp
 .vercel
-.env*

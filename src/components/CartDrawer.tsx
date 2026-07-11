@@ -85,8 +85,8 @@ export default function CartDrawer() {
         {/* Header */}
         <div className="cart-header">
           <div className="flex items-center gap-2">
-            <ShoppingCart size={18} className="text-indigo-400" />
-            <h2 className="font-bold text-base">Giỏ hàng</h2>
+            <ShoppingCart size={18} className="text-primary" />
+            <h2 className="font-bold text-base text-on-surface">Giỏ hàng</h2>
             {totalCount > 0 && (
               <span className="cart-count-badge">{totalCount}</span>
             )}
@@ -104,9 +104,9 @@ export default function CartDrawer() {
         <div className="cart-items">
           {items.length === 0 ? (
             <div className="cart-empty">
-              <ShoppingCart size={40} className="text-gray-600 mb-3" />
-              <p className="text-gray-400 text-sm">Giỏ hàng trống</p>
-              <p className="text-gray-500 text-xs mt-1">
+              <ShoppingCart size={40} className="text-outline mb-3" />
+              <p className="text-on-surface-variant text-sm">Giỏ hàng trống</p>
+              <p className="text-outline text-xs mt-1">
                 Hỏi AI để tìm sản phẩm phù hợp!
               </p>
             </div>
@@ -127,15 +127,15 @@ export default function CartDrawer() {
                         }}
                       />
                     ) : (
-                      <ShoppingCart size={20} className="text-gray-600" />
+                      <ShoppingCart size={20} className="text-outline" />
                     )}
                   </div>
 
                   {/* Details */}
                   <div className="cart-item-details">
-                    <p className="cart-item-name">{item.name}</p>
-                    <p className="cart-item-brand">{item.brand}</p>
-                    <p className="cart-item-price">{formatVND(item.price)}</p>
+                    <p className="cart-item-name text-on-surface">{item.name}</p>
+                    <p className="cart-item-brand text-on-surface-variant">{item.brand}</p>
+                    <p className="cart-item-price text-primary font-bold">{formatVND(item.price)}</p>
                   </div>
 
                   {/* Quantity controls */}
@@ -147,7 +147,7 @@ export default function CartDrawer() {
                     >
                       <Minus size={12} />
                     </button>
-                    <span className="cart-qty-value">{item.quantity}</span>
+                    <span className="cart-qty-value text-on-surface">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                       className="cart-qty-btn"
@@ -179,11 +179,11 @@ export default function CartDrawer() {
         {items.length > 0 && !checkoutSuccess && (
           <div className="cart-footer">
             <div className="cart-total-row">
-              <span className="text-gray-400 text-sm">Tổng cộng</span>
-              <span className="cart-total-price">{formatVND(totalPrice)}</span>
+              <span className="text-on-surface-variant text-sm">Tổng cộng</span>
+              <span className="cart-total-price text-primary">{formatVND(totalPrice)}</span>
             </div>
             {checkoutError && (
-              <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+              <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-error-container border border-error/20 text-on-error-container text-xs">
                 <AlertCircle size={14} />
                 {checkoutError}
               </div>
@@ -197,7 +197,7 @@ export default function CartDrawer() {
               <CreditCard size={16} />
               {checkoutLoading ? 'Đang xử lý...' : `Thanh toán (${totalCount} sản phẩm)`}
             </button>
-            <p className="text-center text-xs text-gray-500 mt-2">
+            <p className="text-center text-xs text-outline mt-2">
               * Demo MVP — thanh toán thực chưa được tích hợp
             </p>
           </div>
@@ -206,9 +206,9 @@ export default function CartDrawer() {
         {checkoutSuccess && (
           <div className="cart-footer">
             <div className="flex flex-col items-center gap-2 py-4">
-              <CheckCircle size={40} className="text-green-400" />
-              <p className="text-sm font-semibold text-green-400">Đặt hàng thành công!</p>
-              <p className="text-xs text-gray-400">Đơn hàng của bạn đang được xử lý.</p>
+              <CheckCircle size={40} className="text-success-green" />
+              <p className="text-sm font-semibold text-success-green">Đặt hàng thành công!</p>
+              <p className="text-xs text-on-surface-variant">Đơn hàng của bạn đang được xử lý.</p>
               <button
                 onClick={() => setCheckoutSuccess(false)}
                 className="mt-2 px-4 py-2 text-xs font-medium bg-surface-container border border-outline-variant rounded-lg text-on-surface hover:bg-surface-container-high transition-colors"
