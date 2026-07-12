@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase'
 import { retrieveContext, formatContextForPrompt } from '@/lib/rag'
 import { phongvuTools } from '@/lib/phongvu-tools'
 
-// Allow up to 30 seconds for streaming on Vercel Edge
+// Allow up to 30 seconds for streaming (Node.js runtime)
 export const maxDuration = 30
 export const runtime = 'nodejs'
 
@@ -114,6 +114,7 @@ function buildSystemPrompt(ragContext: string, skills: SkillMetadata[]) {
 // ─── Trace helpers ─────────────────────────────────────────────────────────
 
 async function ensureSession(sessionId: string, userAgent?: string) {
+  if (!supabase) return
   await supabase.from('chat_sessions').upsert(
     { id: sessionId, user_agent: userAgent ?? null },
     { onConflict: 'id', ignoreDuplicates: true },
@@ -129,6 +130,7 @@ async function saveTrace(params: {
   latencyMs?: number
   model?: string
 }) {
+  if (!supabase) return
   try {
     await supabase.from('chat_messages').insert({
       session_id: params.sessionId,

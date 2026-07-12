@@ -23,8 +23,8 @@ const searchProductsTool = tool({
     'Tìm kiếm sản phẩm trên Phong Vũ theo từ khóa. Hỗ trợ lọc theo giá, khuyến mãi, thương hiệu, attributes và sắp xếp. Có thể trả về danh sách filter options (brands, attributes, price range) khi set return_filterable=true.',
   inputSchema: z.object({
     query: z.string().describe("Từ khóa tìm kiếm (VD: 'laptop', 'M.2 SSD', 'tai nghe')"),
-    page: z.number().optional().default(1).describe('Số trang'),
-    limit: z.number().optional().default(5).describe('Số sản phẩm mỗi trang (max 50)'),
+    page: z.number().int().min(1).optional().default(1).describe('Số trang'),
+    limit: z.number().int().min(1).max(50).optional().default(5).describe('Số sản phẩm mỗi trang (max 50)'),
     price_lte: z.number().optional().describe('Giá tối đa (VND). Chỉ thêm khi người dùng set giá cao nhất. VD: 20000000'),
     price_gte: z.number().optional().describe('Giá tối thiểu (VND). Chỉ thêm khi người dùng set giá thấp nhất. VD: 10000000'),
     has_promotions: z.boolean().optional().describe("Chỉ sản phẩm có khuyến mãi. Thêm khi khách hỏi 'có KM không', 'đang giảm giá'"),

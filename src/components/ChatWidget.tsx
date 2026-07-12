@@ -330,7 +330,7 @@ export default function ChatWidget() {
       return null
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [compareList, addItem, toggleDrawer, toggleCompare],
+    [compareList, addItem, toggleDrawer, toggleCompare, expandedProducts],
   )
 
   // ── Chat bubble toggle button ────────────────────────────────────────
