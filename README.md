@@ -520,6 +520,9 @@ The on-demand skill system loads specialized markdown instructions dynamically v
 | `OPENAI_BASE_URL` | No | Custom OpenAI base URL (proxy/gateway) |
 | `OPENAI_MODEL` | No | LLM model (default: `gpt-4o-mini`) |
 
+
+Video demo https://youtu.be/JEn_Yp6mLxE
+
 ## License
 
 MIT
