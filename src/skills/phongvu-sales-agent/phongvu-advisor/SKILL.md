@@ -10,10 +10,8 @@ metadata:
 license: MIT
 parent: phongvu-sales-agent
 allowed-tools:
-  - get_product_detail
   - get_recommendations
   - check_stock
-  - search_products
 ---
 
 # Phong Vũ Sales Advisor

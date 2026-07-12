@@ -149,113 +149,122 @@ async function saveTrace(params: {
 // ─── POST /api/chat ────────────────────────────────────────────────────────
 
 export async function POST(req: Request) {
-  const startTime = Date.now()
-  const body = await req.json()
-  const { messages, sessionId } = body as {
-    messages: UIMessage[]
-    sessionId?: string
-  }
+  try {
+    const startTime = Date.now()
+    const body = await req.json()
+    const { messages, sessionId } = body as {
+      messages: UIMessage[]
+      sessionId?: string
+    }
 
-  if (!messages || messages.length === 0) {
-    return new Response(JSON.stringify({ error: 'No messages provided' }), {
-      status: 400,
+    if (!messages || messages.length === 0) {
+      return new Response(JSON.stringify({ error: 'No messages provided' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    const sid = sessionId ?? crypto.randomUUID()
+    const userAgent = req.headers.get('user-agent') ?? undefined
+    await ensureSession(sid, userAgent)
+
+    // Get latest user message for trace
+    const latestUserMessage =
+      [...messages]
+        .reverse()
+        .find((m) => m.role === 'user')
+        ?.parts.filter((p) => p.type === 'text')
+        .map((p) => p.text)
+        .join(' ') ?? ''
+
+    await saveTrace({ sessionId: sid, role: 'user', content: latestUserMessage })
+
+    // ── RAG context for policy/warranty/FAQ ──────────────────────────────
+    let ragContext = ''
+    try {
+      const ctx = await retrieveContext(latestUserMessage)
+      ragContext = formatContextForPrompt(ctx)
+    } catch (err) {
+      console.warn('[chat/route] RAG retrieval failed:', err)
+    }
+
+    // ── Discover skills ───────────────────────────────────────────────────
+    const skills = await discoverSkills([
+      join(process.cwd(), 'src/skills/phongvu-sales-agent'),
+    ])
+
+    // Stream with Vercel AI SDK v7
+    const result = streamText({
+      model: openai(AI_MODEL),
+      system: buildSystemPrompt(ragContext, skills),
+      messages: await convertToModelMessages(messages),
+      maxOutputTokens: 2048,
+      maxRetries: 3,
+
+      tools: {
+        ...phongvuTools,
+
+        // Skill loader — loads full SKILL.md instructions on demand
+        loadSkill: tool({
+          description: 'Load a skill to get specialized instructions for a specific task (research, compare, advise, support).',
+          inputSchema: z.object({
+            name: z.string().describe('Skill name: phongvu-researcher, phongvu-comparator, phongvu-advisor'),
+          }),
+          execute: async ({ name }) => {
+            const skill = skills.find(s => s.name.toLowerCase() === name.toLowerCase())
+            if (!skill) return { error: `Skill '${name}' not found. Available: ${skills.map(s => s.name).join(', ')}` }
+            try {
+              const content = await readFile(join(skill.path, 'SKILL.md'), 'utf-8')
+              const stripped = content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trim()
+              return { skill: skill.name, instructions: stripped }
+            } catch {
+              return { error: `Failed to load skill '${name}'` }
+            }
+          },
+        }),
+
+        // Client-side tool: addToCart (no server execute)
+        addToCart: tool({
+          description:
+            'Thêm một sản phẩm vào giỏ hàng của khách. Chỉ dùng khi khách hàng yêu cầu rõ ràng muốn mua hoặc thêm vào giỏ.',
+          inputSchema: z.object({
+            productId: z.string().describe('ID sản phẩm'),
+            name: z.string().describe('Tên sản phẩm'),
+            brand: z.string().describe('Thương hiệu'),
+            price: z.number().describe('Giá bán (VND)'),
+            image: z.string().optional().default('').describe('URL hình ảnh'),
+            quantity: z.number().int().min(1).optional().default(1),
+          }),
+        }),
+      },
+
+      toolChoice: 'auto',
+      stopWhen: stepCountIs(5),
+
+      onError: ({ error }) => {
+        console.error('[chat/route] streamText error:', error)
+      },
+    })
+
+    const response = result.toUIMessageStreamResponse()
+    const latencyMs = Date.now() - startTime
+
+    // Fire-and-forget trace
+    saveTrace({
+      sessionId: sid,
+      role: 'assistant',
+      content: '[streaming response]',
+      model: AI_MODEL,
+      latencyMs,
+    }).catch(() => { })
+
+    return response
+  } catch (err) {
+    console.error('[chat/route] POST error:', err)
+    const message = err instanceof Error ? err.message : 'Internal server error'
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
   }
-
-  const sid = sessionId ?? crypto.randomUUID()
-  const userAgent = req.headers.get('user-agent') ?? undefined
-  await ensureSession(sid, userAgent)
-
-  // Get latest user message for trace
-  const latestUserMessage =
-    [...messages]
-      .reverse()
-      .find((m) => m.role === 'user')
-      ?.parts.filter((p) => p.type === 'text')
-      .map((p) => p.text)
-      .join(' ') ?? ''
-
-  await saveTrace({ sessionId: sid, role: 'user', content: latestUserMessage })
-
-  // ── RAG context for policy/warranty/FAQ ──────────────────────────────
-  let ragContext = ''
-  try {
-    const ctx = await retrieveContext(latestUserMessage)
-    ragContext = formatContextForPrompt(ctx)
-  } catch (err) {
-    console.warn('[chat/route] RAG retrieval failed:', err)
-  }
-
-  // ── Discover skills ───────────────────────────────────────────────────
-  const skills = await discoverSkills([
-    join(process.cwd(), 'src/skills/phongvu-sales-agent'),
-  ])
-
-  // Stream with Vercel AI SDK v7
-  const result = streamText({
-    model: openai(AI_MODEL),
-    system: buildSystemPrompt(ragContext, skills),
-    messages: await convertToModelMessages(messages),
-    maxOutputTokens: 2048,
-    maxRetries: 3,
-
-    tools: {
-      ...phongvuTools,
-
-      // Skill loader — loads full SKILL.md instructions on demand
-      loadSkill: tool({
-        description: 'Load a skill to get specialized instructions for a specific task (research, compare, advise, support).',
-        inputSchema: z.object({
-          name: z.string().describe('Skill name: phongvu-researcher, phongvu-comparator, phongvu-advisor'),
-        }),
-        execute: async ({ name }) => {
-          const skill = skills.find(s => s.name.toLowerCase() === name.toLowerCase())
-          if (!skill) return { error: `Skill '${name}' not found. Available: ${skills.map(s => s.name).join(', ')}` }
-          try {
-            const content = await readFile(join(skill.path, 'SKILL.md'), 'utf-8')
-            const stripped = content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trim()
-            return { skill: skill.name, instructions: stripped }
-          } catch {
-            return { error: `Failed to load skill '${name}'` }
-          }
-        },
-      }),
-
-      // Client-side tool: addToCart (no server execute)
-      addToCart: tool({
-        description:
-          'Thêm một sản phẩm vào giỏ hàng của khách. Chỉ dùng khi khách hàng yêu cầu rõ ràng muốn mua hoặc thêm vào giỏ.',
-        inputSchema: z.object({
-          productId: z.string().describe('ID sản phẩm'),
-          name: z.string().describe('Tên sản phẩm'),
-          brand: z.string().describe('Thương hiệu'),
-          price: z.number().describe('Giá bán (VND)'),
-          image: z.string().optional().default('').describe('URL hình ảnh'),
-          quantity: z.number().int().min(1).optional().default(1),
-        }),
-      }),
-    },
-
-    toolChoice: 'auto',
-    stopWhen: stepCountIs(5),
-
-    onError: ({ error }) => {
-      console.error('[chat/route] streamText error:', error)
-    },
-  })
-
-  const response = result.toUIMessageStreamResponse()
-  const latencyMs = Date.now() - startTime
-
-  // Fire-and-forget trace
-  saveTrace({
-    sessionId: sid,
-    role: 'assistant',
-    content: '[streaming response]',
-    model: AI_MODEL,
-    latencyMs,
-  }).catch(() => { })
-
-  return response
 }

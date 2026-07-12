@@ -93,7 +93,12 @@ export function rankHelpDocs(docs: HelpDocument[], query: string, options: RankH
 
   const pool = category ? docs.filter((d) => d.category === category) : docs
   const terms = normalize(query).split(/\s+/).filter(Boolean)
-  if (terms.length === 0) return pool.slice(0, maxResults)
+  if (terms.length === 0) {
+    return pool.slice(0, maxResults).map((d) => ({
+      ...d,
+      content: d.content.length > MAX_CONTENT_CHARS ? d.content.slice(0, MAX_CONTENT_CHARS) + '…' : d.content,
+    }))
+  }
 
   const scored = pool.map((doc) => {
     const title = normalize(doc.title)

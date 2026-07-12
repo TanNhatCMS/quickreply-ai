@@ -143,6 +143,8 @@ export async function getOrders(
   limit: number = 20,
   status?: string,
 ): Promise<PaginatedResult<Order>> {
+  if (!supabase) return { data: [], totalCount: 0, page, limit }
+
   const offset = (page - 1) * limit
 
   let query = supabase
@@ -166,6 +168,8 @@ export async function getOrders(
 }
 
 export async function getDashboardMetrics(): Promise<DashboardMetrics> {
+  if (!supabase) return { totalConversations: 0, avgResponseTimeMs: 0, aiDeflectionRate: 0, conversionRate: 0 }
+
   const { count: totalConversations } = await supabase
     .from('chat_sessions')
     .select('*', { count: 'exact', head: true })

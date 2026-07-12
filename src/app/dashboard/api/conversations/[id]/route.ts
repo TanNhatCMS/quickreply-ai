@@ -29,6 +29,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 })
+    }
+
     const { id } = await params
 
     await supabase.from('chat_messages').delete().eq('session_id', id)

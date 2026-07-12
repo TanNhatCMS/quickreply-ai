@@ -69,7 +69,7 @@ describe('rankHelpDocs', () => {
   })
 
   it('respects maxResults', () => {
-    const results = rankHelpDocs(docs, 'phong vũ', { maxResults: 1 })
-    expect(results.length).toBeLessThanOrEqual(1)
+    const results = rankHelpDocs(docs, '7 ngày', { maxResults: 1 })
+    expect(results).toHaveLength(1)
   })
 })
