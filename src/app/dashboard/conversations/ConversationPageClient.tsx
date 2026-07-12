@@ -54,17 +54,25 @@ export default function ConversationPageClient({
     fetchPage(1, query)
   }
 
+  const [deleting, setDeleting] = useState(false)
+
   async function handleDelete(id: string) {
+    if (deleting) return
+    setDeleting(true)
     try {
       const res = await fetch(`/dashboard/api/conversations/${id}/delete`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error || 'Delete failed')
       }
-      // Refresh current page
-      fetchPage(page, search)
+      const newTotal = totalCount - 1
+      const newTotalPages = Math.max(1, Math.ceil(newTotal / limit))
+      const targetPage = Math.min(page, newTotalPages)
+      fetchPage(targetPage, search)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Xóa thất bại')
+    } finally {
+      setDeleting(false)
     }
   }
 
