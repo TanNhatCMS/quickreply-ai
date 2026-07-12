@@ -54,6 +54,20 @@ export default function ConversationPageClient({
     fetchPage(1, query)
   }
 
+  async function handleDelete(id: string) {
+    try {
+      const res = await fetch(`/dashboard/api/conversations/${id}/delete`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Delete failed')
+      }
+      // Refresh current page
+      fetchPage(page, search)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Xóa thất bại')
+    }
+  }
+
   return (
     <div className="space-y-md">
       <div>
@@ -70,6 +84,7 @@ export default function ConversationPageClient({
         limit={limit}
         onPageChange={handlePageChange}
         onSearch={handleSearch}
+        onDelete={handleDelete}
         loading={loading}
       />
     </div>

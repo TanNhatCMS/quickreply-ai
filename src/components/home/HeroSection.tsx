@@ -12,9 +12,15 @@ export default function HeroSection() {
           <p className="font-body-lg text-body-lg text-white/90 leading-relaxed">
             Khám phá dải sản phẩm laptop AI thế hệ mới với hiệu năng vượt trội, tối ưu cho mọi tác vụ công việc và giải trí.
           </p>
-          <button className="mt-4 bg-white text-primary font-semibold py-3 px-8 rounded-full hover:bg-surface-blue transition-colors w-fit">
-            Mua Ngay
-          </button>
+          <div className="mt-4 flex gap-3 flex-wrap">
+            <button className="bg-white text-primary font-semibold py-3 px-8 rounded-full hover:bg-surface-blue transition-colors w-fit">
+              Mua Ngay
+            </button>
+            <a href="/dashboard" className="bg-white/15 backdrop-blur-sm text-white font-semibold py-3 px-8 rounded-full border border-white/30 hover:bg-white/25 transition-colors w-fit inline-flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px]">dashboard</span>
+              Dashboard Demo
+            </a>
+          </div>
         </div>
         <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, rgba(255,255,255,0.4) 0%, transparent 40%)' }} />
       </div>
