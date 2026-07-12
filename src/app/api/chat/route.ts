@@ -187,7 +187,7 @@ export async function POST(req: Request) {
 
   // ── Discover skills ───────────────────────────────────────────────────
   const skills = await discoverSkills([
-    'src/skills/phongvu-sales-agent',
+    join(process.cwd(), 'src/skills/phongvu-sales-agent'),
   ])
 
   // Stream with Vercel AI SDK v7

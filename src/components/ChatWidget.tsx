@@ -158,6 +158,9 @@ export default function ChatWidget() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
       // search_products → Product cards (collapsible)
       if (toolName === 'search_products') {
+        if (output && typeof output === 'object' && 'error' in output) {
+          return <p className="text-sm text-error">⚠️ {(output as { error: string }).error}</p>
+        }
         const { products, total } = output as SearchProductsResult
         if (!products?.length) return <p className="text-sm text-outline">Không tìm thấy sản phẩm phù hợp.</p>
 
@@ -260,8 +263,11 @@ export default function ChatWidget() {
         )
       }
 
-      // MCP: compare_products → Comparison grid
+      // compare_products → Comparison grid
       if (toolName === 'compare_products') {
+        if (output && typeof output === 'object' && 'error' in output) {
+          return <p className="text-sm text-error">⚠️ {(output as { error: string }).error}</p>
+        }
         const { comparison } = output as CompareProductsResult
         if (!comparison?.length) return <p className="text-sm text-gray-400">Không thể so sánh sản phẩm.</p>
 
@@ -279,6 +285,16 @@ export default function ChatWidget() {
                 <a href={p.url} target="_blank" rel="noopener noreferrer" className="comparison-link">
                   Xem chi tiết
                 </a>
+                <button
+                  onClick={() => {
+                    addItem({ productId: p.sku, name: p.name, brand: p.brand, price: p.priceCurrent ?? 0, image: p.image }, 1)
+                    toggleDrawer(true)
+                  }}
+                  disabled={!p.inStock}
+                  className="w-full mt-2 py-1.5 text-center text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Chọn mua
+                </button>
               </div>
             ))}
           </div>

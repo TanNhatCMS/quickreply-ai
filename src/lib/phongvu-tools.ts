@@ -53,7 +53,10 @@ const searchProductsTool = tool({
       .default(false)
       .describe('true để trả về danh sách filter options (brands, attributes, price range) cùng kết quả. Dùng cho lần search đầu tiên.'),
   }),
-  execute: async (input) => searchProducts(input),
+  execute: async (input) => {
+    try { return await searchProducts(input) }
+    catch (e) { return { error: e instanceof Error ? e.message : String(e) } }
+  },
 })
 
 const getProductDetailTool = tool({
@@ -61,7 +64,10 @@ const getProductDetailTool = tool({
   inputSchema: z.object({
     sku: z.string().describe("Mã SKU sản phẩm (VD: '250512246')"),
   }),
-  execute: async ({ sku }) => getProductDetail(sku),
+  execute: async ({ sku }) => {
+    try { return await getProductDetail(sku) }
+    catch (e) { return { error: e instanceof Error ? e.message : String(e) } }
+  },
 })
 
 const compareProductsTool = tool({
@@ -69,7 +75,10 @@ const compareProductsTool = tool({
   inputSchema: z.object({
     skus: z.array(z.string()).min(2).max(3).describe('Danh sách SKU cần so sánh (2-3 sản phẩm)'),
   }),
-  execute: async ({ skus }) => compareProducts(skus),
+  execute: async ({ skus }) => {
+    try { return await compareProducts(skus) }
+    catch (e) { return { error: e instanceof Error ? e.message : String(e) } }
+  },
 })
 
 const getRecommendationsTool = tool({
@@ -77,7 +86,10 @@ const getRecommendationsTool = tool({
   inputSchema: z.object({
     sku: z.string().describe('Mã SKU sản phẩm'),
   }),
-  execute: async ({ sku }) => getRecommendations(sku),
+  execute: async ({ sku }) => {
+    try { return await getRecommendations(sku) }
+    catch (e) { return { error: e instanceof Error ? e.message : String(e) } }
+  },
 })
 
 const checkStockTool = tool({
@@ -85,7 +97,10 @@ const checkStockTool = tool({
   inputSchema: z.object({
     sku: z.string().describe('Mã SKU sản phẩm'),
   }),
-  execute: async ({ sku }) => checkStock(sku),
+  execute: async ({ sku }) => {
+    try { return await checkStock(sku) }
+    catch (e) { return { error: e instanceof Error ? e.message : String(e) } }
+  },
 })
 
 const getPopularKeywordsTool = tool({
@@ -93,7 +108,10 @@ const getPopularKeywordsTool = tool({
   inputSchema: z.object({
     limit: z.number().optional().default(10).describe('Số lượng từ khóa'),
   }),
-  execute: async ({ limit }) => getPopularKeywords(limit),
+  execute: async ({ limit }) => {
+    try { return await getPopularKeywords(limit) }
+    catch (e) { return { error: e instanceof Error ? e.message : String(e) } }
+  },
 })
 
 const searchKnowledgeTool = tool({
@@ -108,8 +126,10 @@ const searchKnowledgeTool = tool({
     maxResults: z.number().int().min(1).max(10).optional().default(5).describe('Số lượng kết quả tối đa'),
   }),
   execute: async ({ query, category, maxResults }) => {
-    const documents = await searchHelpDocs(query, { category, maxResults })
-    return { documents }
+    try {
+      const documents = await searchHelpDocs(query, { category, maxResults })
+      return { documents }
+    } catch (e) { return { error: e instanceof Error ? e.message : String(e) } }
   },
 })
 
