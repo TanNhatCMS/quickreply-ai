@@ -1,4 +1,6 @@
 import { createOpenAI } from '@ai-sdk/openai'
+import { readFile, readdir } from 'fs/promises'
+import { join } from 'path'
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -8,40 +10,110 @@ const openai = createOpenAI({
 const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from 'ai'
 import { z } from 'zod'
-import { retrieveContext, formatContextForPrompt, queryDocuments } from '@/lib/rag'
 import { supabase } from '@/lib/supabase'
+import { retrieveContext, formatContextForPrompt } from '@/lib/rag'
+import { phongvuTools } from '@/lib/phongvu-tools'
 
 // Allow up to 30 seconds for streaming on Vercel Edge
 export const maxDuration = 30
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
-// ─── System prompt factory ─────────────────────────────────────────────────
+// ─── Skill Discovery ──────────────────────────────────────────────────────
 
-function buildSystemPrompt(ragContext: string): string {
-  return `Bạn là QuickReply AI — trợ lý tư vấn bán hàng thông minh của Phong Vũ, chuyên về sản phẩm công nghệ.
+interface SkillMetadata {
+  name: string
+  description: string
+  path: string
+}
 
-**Vai trò của bạn:**
-- Tư vấn sản phẩm laptop, máy tính, phụ kiện dựa trên nhu cầu khách hàng
-- Cung cấp thông tin chính xác về thông số kỹ thuật, giá cả, khuyến mãi, bảo hành
-- Giúp khách hàng so sánh và lựa chọn sản phẩm phù hợp
-- Hỗ trợ thêm sản phẩm vào giỏ hàng khi được yêu cầu
+function parseFrontmatter(content: string): { name: string; description: string } | null {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+  if (!match) return null
+  const yaml = match[1]
+  const nameMatch = yaml.match(/^name:\s*(.+)$/m)
+  const descMatch = yaml.match(/^description:\s*>?\s*\n?([\s\S]*?)(?=\n[a-z]|\nmetadata:|$)/m)
+  if (!nameMatch) return null
+  return {
+    name: nameMatch[1].trim(),
+    description: descMatch ? descMatch[1].replace(/\n\s*/g, ' ').trim() : '',
+  }
+}
+
+async function discoverSkills(dirs: string[]): Promise<SkillMetadata[]> {
+  const skills: SkillMetadata[] = []
+  const seen = new Set<string>()
+
+  for (const dir of dirs) {
+    try {
+      const entries = await readdir(dir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue
+        const skillDir = join(dir, entry.name)
+        const skillFile = join(skillDir, 'SKILL.md')
+        try {
+          const content = await readFile(skillFile, 'utf-8')
+          const fm = parseFrontmatter(content)
+          if (!fm || seen.has(fm.name)) continue
+          seen.add(fm.name)
+          skills.push({ name: fm.name, description: fm.description, path: skillDir })
+        } catch { continue }
+      }
+    } catch { continue }
+  }
+  return skills
+}
+
+function buildSkillsPrompt(skills: SkillMetadata[]): string {
+  if (!skills.length) return ''
+  const list = skills.map(s => `- **${s.name}**: ${s.description}`).join('\n')
+  return `\n## Skills (load on-demand)\n\nDùng tool \`loadSkill\` để load skill khi yêu cầu khớp mô tả. KHÔNG load tự động — chỉ khi cần.\n\nAvailable:\n${list}`
+}
+
+// ─── System prompt ─────────────────────────────────────────────────────────
+
+const SYSTEM_PROMPT = `Bạn là QuickReply AI — trợ lý tư vấn bán hàng thông minh của Phong Vũ (phongvu.vn).
+
+**Vai trò:** Tư vấn sản phẩm điện tử, so sánh, tìm khuyến mãi, kiểm tra tồn kho, thêm vào giỏ hàng.
 
 **Nguyên tắc:**
 - Luôn trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp
-- Chỉ tư vấn dựa trên thông tin thực tế từ cơ sở dữ liệu
-- Khi cần tìm thông tin, gọi tool \`searchKnowledge\` để tra cứu
-- Khi khách muốn thêm giỏ hàng, gọi tool \`addToCart\`
-- Không bịa đặt thông tin
+- Giá hiển thị VND có dấu phân cách (VD: 28,290,000đ)
+- Link mua: luôn kèm https://phongvu.vn/{canonical}
+- Khuyến mãi: highlight bằng emoji hoặc in đậm
+- Specs: dùng bullet points, ngắn gọn
+- So sánh: dùng bảng markdown
+- Sau mỗi trả lời, gợi ý hành động tiếp theo
 
-**Dữ liệu ngữ cảnh liên quan đến yêu cầu hiện tại:**
-${ragContext}
+**Tools có sẵn (BẮT BUỘC sử dụng khi tìm kiếm sản phẩm):**
+- search_products: tìm kiếm sản phẩm theo từ khóa, lọc giá/brand/attributes
+- get_product_detail: chi tiết sản phẩm theo SKU
+- compare_products: so sánh 2-3 sản phẩm
+- get_recommendations: sản phẩm gợi ý liên quan
+- check_stock: kiểm tra tồn kho
+- get_popular_keywords: từ khóa phổ biến
+- searchKnowledge: tra cứu chính sách/bảo hành/đổi trả/thanh toán/giao hàng từ help.phongvu.vn
+- addToCart: thêm vào giỏ hàng (client-side)
+
+**Quy tắc bắt buộc:**
+- Khi khách hàng hỏi về sản phẩm, giá, khuyến mãi, hoặc muốn mua hàng → PHẢI gọi search_products hoặc get_product_detail
+- Khi khách hỏi về chính sách, bảo hành, đổi trả, thanh toán, giao hàng, lắp đặt → gọi searchKnowledge (dùng thêm ngữ cảnh RAG bên dưới nếu có sẵn)
+- KHÔNG BAO GIỜ nói "không thể truy cập cơ sở dữ liệu" — luôn dùng tools để tìm kiếm
+- Nếu tìm không thấy, thử lại với từ khóa khác hoặc gợi ý sản phẩm tương tự
 `
+
+// ─── Build system prompt with RAG context ──────────────────────────────────
+
+function buildSystemPrompt(ragContext: string, skills: SkillMetadata[]) {
+  let prompt = SYSTEM_PROMPT + buildSkillsPrompt(skills)
+  if (ragContext) {
+    prompt += `\n\n**Thông tin tham khảo (RAG):**\n${ragContext}`
+  }
+  return prompt
 }
 
 // ─── Trace helpers ─────────────────────────────────────────────────────────
 
 async function ensureSession(sessionId: string, userAgent?: string) {
-  // Upsert session — create if not exists
   await supabase.from('chat_sessions').upsert(
     { id: sessionId, user_agent: userAgent ?? null },
     { onConflict: 'id', ignoreDuplicates: true },
@@ -89,12 +161,11 @@ export async function POST(req: Request) {
     })
   }
 
-  // Ensure session exists for trace
   const sid = sessionId ?? crypto.randomUUID()
   const userAgent = req.headers.get('user-agent') ?? undefined
   await ensureSession(sid, userAgent)
 
-  // Get the latest user message text for RAG retrieval
+  // Get latest user message for trace
   const latestUserMessage =
     [...messages]
       .reverse()
@@ -103,105 +174,86 @@ export async function POST(req: Request) {
       .map((p) => p.text)
       .join(' ') ?? ''
 
-  // Save user message trace
   await saveTrace({ sessionId: sid, role: 'user', content: latestUserMessage })
 
-  // Retrieve relevant context from Supabase
+  // ── RAG context for policy/warranty/FAQ ──────────────────────────────
   let ragContext = ''
   try {
     const ctx = await retrieveContext(latestUserMessage)
     ragContext = formatContextForPrompt(ctx)
   } catch (err) {
-    console.warn('[chat/route] RAG retrieval failed, continuing without context:', err)
-    ragContext = 'Không thể tải thông tin lúc này.'
+    console.warn('[chat/route] RAG retrieval failed:', err)
   }
+
+  // ── Discover skills ───────────────────────────────────────────────────
+  const skills = await discoverSkills([
+    join(process.cwd(), 'src/skills/phongvu-sales-agent'),
+  ])
 
   // Stream with Vercel AI SDK v7
   const result = streamText({
     model: openai(AI_MODEL),
-    system: buildSystemPrompt(ragContext),
+    system: buildSystemPrompt(ragContext, skills),
     messages: await convertToModelMessages(messages),
-    maxOutputTokens: 1024,
+    maxOutputTokens: 2048,
     maxRetries: 3,
 
-    // ── Tool definitions ────────────────────────────────────────────────
     tools: {
-      /**
-       * searchKnowledge — search the RAG knowledge base for relevant information.
-       * Covers products, policies, warranty, payment, delivery, promotions, FAQ.
-       */
-      searchKnowledge: tool({
-        description:
-          'Tìm kiếm thông tin từ cơ sở dữ liệu kiến thức. Dùng khi khách hỏi về sản phẩm, chính sách, bảo hành, khuyến mãi, giao hàng, thanh toán, hoặc bất kỳ thông tin nào về Phong Vũ.',
+      ...phongvuTools,
+
+      // Skill loader — loads full SKILL.md instructions on demand
+      loadSkill: tool({
+        description: 'Load a skill to get specialized instructions for a specific task (research, compare, advise, support).',
         inputSchema: z.object({
-          query: z.string().describe('Câu hỏi hoặc từ khóa tìm kiếm (tiếng Việt)'),
-          category: z
-            .enum(['company', 'policy', 'warranty', 'payment', 'delivery', 'faq', 'service', 'legal'])
-            .optional()
-            .describe('Lọc theo danh mục (tùy chọn)'),
-          maxResults: z
-            .number()
-            .int()
-            .min(1)
-            .max(10)
-            .optional()
-            .default(5)
-            .describe('Số lượng kết quả tối đa'),
+          name: z.string().describe('Skill name: phongvu-researcher, phongvu-comparator, phongvu-advisor'),
         }),
-        execute: async ({ query, category, maxResults }) => {
-          const docs = await queryDocuments(query, {
-            matchCount: maxResults,
-            category,
-          })
-          return {
-            documents: docs.map((d) => ({
-              title: d.title,
-              content: d.content,
-              category: d.category,
-            })),
+        execute: async ({ name }) => {
+          const skill = skills.find(s => s.name.toLowerCase() === name.toLowerCase())
+          if (!skill) return { error: `Skill '${name}' not found. Available: ${skills.map(s => s.name).join(', ')}` }
+          try {
+            const content = await readFile(join(skill.path, 'SKILL.md'), 'utf-8')
+            const stripped = content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '').trim()
+            return { skill: skill.name, instructions: stripped }
+          } catch {
+            return { error: `Failed to load skill '${name}'` }
           }
         },
       }),
 
-      /**
-       * addToCart — client-side tool: no server execute().
-       * ChatWidget handles via onToolCall + addToolOutput.
-       */
+      // Client-side tool: addToCart (no server execute)
       addToCart: tool({
         description:
           'Thêm một sản phẩm vào giỏ hàng của khách. Chỉ dùng khi khách hàng yêu cầu rõ ràng muốn mua hoặc thêm vào giỏ.',
         inputSchema: z.object({
-          productId: z.string().describe('ID sản phẩm (UUID từ database)'),
+          productId: z.string().describe('ID sản phẩm'),
           name: z.string().describe('Tên sản phẩm'),
           brand: z.string().describe('Thương hiệu'),
           price: z.number().describe('Giá bán (VND)'),
-          image: z.string().optional().default('').describe('URL hình ảnh sản phẩm'),
+          image: z.string().optional().default('').describe('URL hình ảnh'),
           quantity: z.number().int().min(1).optional().default(1),
         }),
       }),
     },
 
-    // Allow LLM to call tools for up to 3 steps before final response
-    stopWhen: stepCountIs(3),
+    toolChoice: 'auto',
+    stopWhen: stepCountIs(5),
 
-    // Silent retry handled via maxRetries above + Vercel edge
     onError: ({ error }) => {
       console.error('[chat/route] streamText error:', error)
     },
   })
 
-  // Save assistant trace after stream completes (fire-and-forget)
-  const responsePromise = result.toUIMessageStreamResponse()
+  const response = result.toUIMessageStreamResponse()
   const latencyMs = Date.now() - startTime
 
-  // Fire-and-forget trace save
+  // Fire-and-forget trace
   saveTrace({
     sessionId: sid,
     role: 'assistant',
     content: '[streaming response]',
     model: AI_MODEL,
     latencyMs,
-  }).catch(() => {})
+  }).catch(() => { })
 
-  return responsePromise
+  return response
 }

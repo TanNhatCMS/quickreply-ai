@@ -32,8 +32,8 @@ The application must be built using Next.js (App Router), Tailwind CSS, TypeScri
 ### III. Streamable UI & Function Calling
 All chat widgets must implement standard chat layouts using `@ai-sdk/elements`. Interactive React components (Product Cards, Buy Now buttons, specification comparison grids) must be dynamically streamed into the chat response using Vercel AI SDK Core function calling (tools) and streamable UI.
 
-### IV. Fail-Safe UX & Local RAG
-RAG architecture must query a fast PostgreSQL database with `pgvector` hosted on Supabase (or local vector mock for rapid testing). To guarantee a fluent user experience during live judging, LLM timeouts or database errors must implement robust fallback mechanisms (e.g., 3x silent retries).
+### IV. Fail-Safe UX & Hybrid Data
+Product data is retrieved realtime from Phong Vũ Discovery API via MCP tools. Policy/warranty/FAQ data uses RAG with PostgreSQL `pgvector` on Supabase. LLM timeouts or API errors must implement robust fallback mechanisms (e.g., 3x silent retries).
 
 ### V. Definition of Ready (DoR)
 Before coding any feature, the specification file MUST include:

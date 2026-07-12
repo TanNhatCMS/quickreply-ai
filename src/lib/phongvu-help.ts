@@ -79,7 +79,7 @@ function normalize(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, "") // strip diacritics for loose matching
+    .replace(/[̀-ͯ]/g, '') // strip diacritics for loose matching
 }
 
 export interface RankHelpDocsOptions {

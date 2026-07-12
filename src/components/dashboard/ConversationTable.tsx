@@ -10,6 +10,7 @@ interface ConversationTableProps {
   limit: number
   onPageChange: (page: number) => void
   onSearch: (query: string) => void
+  onDelete: (id: string) => void
   loading: boolean
 }
 
@@ -44,6 +45,7 @@ export default function ConversationTable({
   limit,
   onPageChange,
   onSearch,
+  onDelete,
   loading,
 }: ConversationTableProps) {
   const [searchInput, setSearchInput] = useState('')
@@ -130,13 +132,14 @@ export default function ConversationTable({
               <th className="text-left px-sm py-xs text-label-sm font-medium text-on-surface-variant">Kết thúc</th>
               <th className="text-left px-sm py-xs text-label-sm font-medium text-on-surface-variant">Tin nhắn</th>
               <th className="text-left px-sm py-xs text-label-sm font-medium text-on-surface-variant">User Agent</th>
+              <th className="text-right px-sm py-xs text-label-sm font-medium text-on-surface-variant">Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {loading
               ? Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-outline-variant">
-                    {Array.from({ length: 5 }).map((_, j) => (
+                    {Array.from({ length: 6 }).map((_, j) => (
                       <td key={j} className="px-sm py-sm">
                         <div className="h-4 w-24 bg-surface-container-high rounded animate-pulse" />
                       </td>
@@ -154,10 +157,24 @@ export default function ConversationTable({
                       <td className="px-sm py-xs text-label-md text-on-surface">{formatDate(s.ended_at)}</td>
                       <td className="px-sm py-xs text-label-md text-on-surface">{s.message_count}</td>
                       <td className="px-sm py-xs text-label-md text-on-surface-variant max-w-[200px] truncate">{s.user_agent ?? '—'}</td>
+                      <td className="px-sm py-xs text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (confirm('Xóa phiên chat này? Tất cả tin nhắn sẽ bị xóa.')) {
+                              onDelete(s.id)
+                            }
+                          }}
+                          className="p-1.5 rounded-lg text-error hover:bg-error-container transition-colors"
+                          title="Xóa phiên chat"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                      </td>
                     </tr>
                     {expandedId === s.id && (
                       <tr key={`${s.id}-detail`}>
-                        <td colSpan={5} className="bg-surface-container-low px-sm py-sm">
+                        <td colSpan={6} className="bg-surface-container-low px-sm py-sm">
                           {detailLoading ? (
                             <div className="flex items-center gap-xs py-sm">
                               <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />

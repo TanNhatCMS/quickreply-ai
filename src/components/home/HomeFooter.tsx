@@ -4,9 +4,6 @@ export default function HomeFooter() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter px-margin-edge py-stack-lg max-w-container-max mx-auto">
         <div>
           <span className="text-xl font-bold text-primary">Phong Vu</span>
-          <p className="mt-3 text-body-sm text-on-surface-variant">
-            © 2024 Phong Vu Computer. High-Tech Hardware Solutions.
-          </p>
         </div>
 
         <div>
