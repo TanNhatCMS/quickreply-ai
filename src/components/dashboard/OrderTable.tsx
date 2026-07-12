@@ -111,68 +111,65 @@ export default function OrderTable({
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {orders.map((order) => {
-                const isExpanded = expandedRow === order.id
-                return (
-                  <>
-                    <tr
-                      key={order.id}
-                      onClick={() =>
-                        setExpandedRow(isExpanded ? null : order.id)
-                      }
-                      className="border-t border-outline-variant cursor-pointer hover:bg-surface-container-low transition-colors"
-                    >
-                      <td className="px-sm py-xs text-label-md text-on-surface font-mono">
-                        {order.id.slice(0, 8)}
-                      </td>
-                      <td className="px-sm py-xs text-label-md text-on-surface-variant font-mono">
-                        {order.session_id?.slice(0, 8) ?? 'N/A'}
-                      </td>
-                      <td className="px-sm py-xs text-label-md text-on-surface">
-                        {order.items.length}
-                      </td>
-                      <td className="px-sm py-xs text-label-md text-on-surface font-semibold text-right">
-                        {formatVND(order.total)}
-                      </td>
-                      <td className="px-sm py-xs text-center">
-                        <span
-                          className={`inline-block px-xs py-[2px] rounded-full text-label-sm font-medium ${
-                            STATUS_STYLES[order.status] ?? 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-sm py-xs text-label-md text-on-surface-variant text-right">
-                        {formatDate(order.created_at)}
+            {orders.map((order) => {
+              const isExpanded = expandedRow === order.id
+              return (
+                <tbody key={order.id}>
+                  <tr
+                    onClick={() =>
+                      setExpandedRow(isExpanded ? null : order.id)
+                    }
+                    className="border-t border-outline-variant cursor-pointer hover:bg-surface-container-low transition-colors"
+                  >
+                    <td className="px-sm py-xs text-label-md text-on-surface font-mono">
+                      {order.id.slice(0, 8)}
+                    </td>
+                    <td className="px-sm py-xs text-label-md text-on-surface-variant font-mono">
+                      {order.session_id?.slice(0, 8) ?? 'N/A'}
+                    </td>
+                    <td className="px-sm py-xs text-label-md text-on-surface">
+                      {order.items.length}
+                    </td>
+                    <td className="px-sm py-xs text-label-md text-on-surface font-semibold text-right">
+                      {formatVND(order.total)}
+                    </td>
+                    <td className="px-sm py-xs text-center">
+                      <span
+                        className={`inline-block px-xs py-[2px] rounded-full text-label-sm font-medium ${
+                          STATUS_STYLES[order.status] ?? 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-sm py-xs text-label-md text-on-surface-variant text-right">
+                      {formatDate(order.created_at)}
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={6} className="bg-surface-container-low px-md py-sm">
+                        <div className="space-y-xs">
+                          {order.items.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-label-md"
+                            >
+                              <span className="text-on-surface">
+                                {item.name}
+                              </span>
+                              <span className="text-on-surface-variant">
+                                x{item.quantity} &middot; {formatVND(item.price)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </td>
                     </tr>
-                    {isExpanded && (
-                      <tr key={`${order.id}-detail`}>
-                        <td colSpan={6} className="bg-surface-container-low px-md py-sm">
-                          <div className="space-y-xs">
-                            {order.items.map((item, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-center justify-between text-label-md"
-                              >
-                                <span className="text-on-surface">
-                                  {item.name}
-                                </span>
-                                <span className="text-on-surface-variant">
-                                  x{item.quantity} &middot; {formatVND(item.price)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </>
-                )
-              })}
-            </tbody>
+                  )}
+                </tbody>
+              )
+            })}
           </table>
         </div>
       )}

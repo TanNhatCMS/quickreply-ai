@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, type UIMessage } from 'ai'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { MessageSquare, X, Send, Loader2, Bot, User, GitCompare, Check } from 'lucide-react'
+import { MessageSquare, X, Send, Loader2, Bot, User, GitCompare, Check, RotateCcw } from 'lucide-react'
 import { getSessionId } from '@/lib/session'
 import { useCartStore } from '@/store/useCartStore'
 import ReactMarkdown from 'react-markdown'
@@ -77,7 +77,7 @@ export default function ChatWidget() {
 
 
   // ── Vercel AI SDK v7 useChat ──────────────────────────────────────────────
-  const { messages, sendMessage, status, error } =
+  const { messages, sendMessage, status, error, setMessages } =
     useChat({
       transport: new DefaultChatTransport({
         api: '/api/chat',
@@ -348,9 +348,21 @@ export default function ChatWidget() {
                 <p className="text-[10px] opacity-80 uppercase tracking-wider">Đang trực tuyến</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="chat-close-btn" aria-label="Đóng">
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-1">
+              {messages.length > 0 && (
+                <button
+                  onClick={() => setMessages([])}
+                  className="chat-new-btn"
+                  aria-label="Tạo phiên mới"
+                  title="Tạo phiên mới"
+                >
+                  <RotateCcw size={16} />
+                </button>
+              )}
+              <button onClick={() => setIsOpen(false)} className="chat-close-btn" aria-label="Đóng">
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           {/* Message list */}
@@ -366,7 +378,7 @@ export default function ChatWidget() {
                   {[
                     'Tư vấn laptop dưới 20 triệu',
                     'Bảo hành ASUS bao lâu?',
-                    'Khuyến mãi đang có gì?',
+                    'Laptop nào đang giảm giá?',
                   ].map((s) => (
                     <button
                       key={s}

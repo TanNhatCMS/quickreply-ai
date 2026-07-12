@@ -521,6 +521,14 @@ body {
   transition: all 0.15s;
 }
 .chat-close-btn:hover { background: rgba(255,255,255,0.2); }
+.chat-new-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 9999px;
+  background: none; border: none;
+  color: white; cursor: pointer;
+  transition: all 0.15s;
+}
+.chat-new-btn:hover { background: rgba(255,255,255,0.2); }
 
 .chat-messages {
   flex: 1;
