@@ -60,7 +60,7 @@ export default function ConversationPageClient({
     if (deleting) return
     setDeleting(true)
     try {
-      const res = await fetch(`/dashboard/api/conversations/${id}/delete`, { method: 'DELETE' })
+      const res = await fetch(`/dashboard/api/conversations/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error || 'Delete failed')
