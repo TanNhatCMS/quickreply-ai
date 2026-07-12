@@ -1,26 +1,26 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl) {
-  throw new Error('Missing env variable: NEXT_PUBLIC_SUPABASE_URL')
-}
-if (!supabaseAnonKey) {
-  throw new Error('Missing env variable: NEXT_PUBLIC_SUPABASE_ANON_KEY')
+function createSupabaseClient(): SupabaseClient | null {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('[supabase] Missing env vars — Supabase features disabled')
+    return null
+  }
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  })
 }
 
 /**
  * Singleton Supabase client for use in browser and Edge runtime.
- * Uses the public anon key — row-level security enforces data access.
+ * Returns null if env vars are missing (graceful degradation).
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    // Anonymous sessions only — no user login flows for MVP
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-})
+export const supabase = createSupabaseClient()
 
 // ------------- Type helpers mirroring the DB schema ----------------
 

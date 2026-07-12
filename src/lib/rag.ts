@@ -51,6 +51,8 @@ export async function queryDocuments(
   query: string,
   options: RAGQueryOptions = {},
 ): Promise<Document[]> {
+  if (!supabase) return []
+
   const { matchThreshold = 0.4, matchCount = 5, category } = options
 
   const embedding = await embedText(query)

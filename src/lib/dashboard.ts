@@ -32,6 +32,8 @@ export async function getConversations(
   limit: number = 20,
   search?: string,
 ): Promise<PaginatedResult<ConversationSummary>> {
+  if (!supabase) return { data: [], totalCount: 0, page, limit }
+
   const offset = (page - 1) * limit
 
   if (search) {
@@ -115,6 +117,7 @@ export async function getConversations(
 export async function getConversationDetail(
   sessionId: string,
 ): Promise<ConversationDetail | null> {
+  if (!supabase) return null
   const { data: session } = await supabase
     .from('chat_sessions')
     .select('*')

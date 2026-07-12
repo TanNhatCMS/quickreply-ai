@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function HeroSection() {
   return (
     <section className="grid grid-cols-1 md:grid-cols-4 gap-gutter h-auto md:h-[400px]">
@@ -16,10 +18,10 @@ export default function HeroSection() {
             <button className="bg-white text-primary font-semibold py-3 px-8 rounded-full hover:bg-surface-blue transition-colors w-fit">
               Mua Ngay
             </button>
-            <a href="/dashboard" className="bg-white/15 backdrop-blur-sm text-white font-semibold py-3 px-8 rounded-full border border-white/30 hover:bg-white/25 transition-colors w-fit inline-flex items-center gap-2">
+            <Link href="/dashboard" className="bg-white/15 backdrop-blur-sm text-white font-semibold py-3 px-8 rounded-full border border-white/30 hover:bg-white/25 transition-colors w-fit inline-flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">dashboard</span>
               Dashboard Demo
-            </a>
+            </Link>
           </div>
         </div>
         <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, rgba(255,255,255,0.4) 0%, transparent 40%)' }} />
