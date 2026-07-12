@@ -406,7 +406,7 @@ export default function ChatWidget() {
                       const tp = part as any
                       const toolName = tp.type.replace('tool-', '')
                       if (tp.state === 'output-available') {
-                        const rendered = renderToolOutput(toolName, tp.output)
+                        const rendered = renderToolOutput(toolName, tp.output, tp.toolCallId)
                         return rendered ? (
                           <div key={tp.toolCallId}>{rendered}</div>
                         ) : null
