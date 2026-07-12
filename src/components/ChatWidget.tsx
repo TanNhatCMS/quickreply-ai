@@ -60,6 +60,7 @@ export default function ChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [inputValue, setInputValue] = useState('')
   const [compareList, setCompareList] = useState<MCPProduct[]>([])
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set())
 
   const addItem = useCartStore((s) => s.addItem)
   const toggleDrawer = useCartStore((s) => s.toggleDrawer)
@@ -153,12 +154,17 @@ export default function ChatWidget() {
 
   // ── Render tool results as React components ──────────────────────────
   const renderToolOutput = useCallback(
-    (toolName: string, output: unknown) => {
+    (toolName: string, output: unknown, toolCallId?: string) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      // MCP: search_products → Product cards
+      // search_products → Product cards (collapsible)
       if (toolName === 'search_products') {
         const { products, total } = output as SearchProductsResult
         if (!products?.length) return <p className="text-sm text-outline">Không tìm thấy sản phẩm phù hợp.</p>
+
+        const VISIBLE_COUNT = 3
+        const isExpanded = toolCallId ? expandedProducts.has(toolCallId) : false
+        const visibleProducts = isExpanded ? products : products.slice(0, VISIBLE_COUNT)
+        const hiddenCount = products.length - VISIBLE_COUNT
 
         return (
           <div className="flex flex-col gap-2 mt-1">
@@ -166,7 +172,7 @@ export default function ChatWidget() {
               <p className="text-xs text-outline">{total} sản phẩm tìm thấy</p>
               <p className="text-[10px] text-outline">Chọn 2 máy để so sánh</p>
             </div>
-            {products.map((p) => {
+            {visibleProducts.map((p) => {
               const isSelected = compareList.some((c) => c.sku === p.sku)
               const isDisabled = compareList.length >= 2 && !isSelected
               return (
@@ -235,6 +241,21 @@ export default function ChatWidget() {
                 </div>
               )
             })}
+            {hiddenCount > 0 && (
+              <button
+                onClick={() =>
+                  setExpandedProducts((prev) => {
+                    const next = new Set(prev)
+                    if (next.has(toolCallId!)) next.delete(toolCallId!)
+                    else next.add(toolCallId!)
+                    return next
+                  })
+                }
+                className="w-full py-2 text-xs font-semibold text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors"
+              >
+                {isExpanded ? 'Thu gọn' : `Xem thêm ${hiddenCount} sản phẩm`}
+              </button>
+            )}
           </div>
         )
       }
