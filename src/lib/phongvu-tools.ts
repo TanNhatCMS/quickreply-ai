@@ -16,6 +16,7 @@ import {
   getRecommendations,
   checkStock,
 } from './phongvu-api'
+import { searchHelpDocs } from './phongvu-help'
 
 const searchProductsTool = tool({
   description:
@@ -95,6 +96,23 @@ const getPopularKeywordsTool = tool({
   execute: async ({ limit }) => getPopularKeywords(limit),
 })
 
+const searchKnowledgeTool = tool({
+  description:
+    'Tìm kiếm thông tin từ trung tâm hỗ trợ Phong Vũ (help.phongvu.vn). Dùng khi khách hỏi về chính sách, bảo hành, đổi trả, thanh toán, giao hàng, lắp đặt, hoặc thông tin công ty.',
+  inputSchema: z.object({
+    query: z.string().describe('Câu hỏi hoặc từ khóa tìm kiếm (tiếng Việt)'),
+    category: z
+      .enum(['company', 'policy', 'warranty', 'payment', 'delivery', 'faq', 'service', 'legal'])
+      .optional()
+      .describe('Lọc theo danh mục (tùy chọn)'),
+    maxResults: z.number().int().min(1).max(10).optional().default(5).describe('Số lượng kết quả tối đa'),
+  }),
+  execute: async ({ query, category, maxResults }) => {
+    const documents = await searchHelpDocs(query, { category, maxResults })
+    return { documents }
+  },
+})
+
 export const phongvuTools = {
   search_products: searchProductsTool,
   get_product_detail: getProductDetailTool,
@@ -102,4 +120,5 @@ export const phongvuTools = {
   get_recommendations: getRecommendationsTool,
   check_stock: checkStockTool,
   get_popular_keywords: getPopularKeywordsTool,
+  searchKnowledge: searchKnowledgeTool,
 }

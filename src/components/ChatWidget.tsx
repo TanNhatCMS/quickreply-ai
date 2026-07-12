@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { MessageSquare, X, Send, Loader2, Bot, User, GitCompare, Check } from 'lucide-react'
 import { getSessionId } from '@/lib/session'
 import { useCartStore } from '@/store/useCartStore'
+import ReactMarkdown from 'react-markdown'
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface KnowledgeDoc {
@@ -373,7 +374,7 @@ export default function ChatWidget() {
                 <div className="chat-message-body">
                   {/* Text content */}
                   {getTextContent(msg) && (
-                    <div className="chat-bubble">{getTextContent(msg)}</div>
+                    <div className="chat-bubble chat-bubble-md"><ReactMarkdown>{getTextContent(msg)}</ReactMarkdown></div>
                   )}
 
                   {/* Tool invocations (rendered as React components) */}

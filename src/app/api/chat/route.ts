@@ -91,10 +91,12 @@ const SYSTEM_PROMPT = `Bạn là QuickReply AI — trợ lý tư vấn bán hàn
 - get_recommendations: sản phẩm gợi ý liên quan
 - check_stock: kiểm tra tồn kho
 - get_popular_keywords: từ khóa phổ biến
+- searchKnowledge: tra cứu chính sách/bảo hành/đổi trả/thanh toán/giao hàng từ help.phongvu.vn
 - addToCart: thêm vào giỏ hàng (client-side)
 
 **Quy tắc bắt buộc:**
 - Khi khách hàng hỏi về sản phẩm, giá, khuyến mãi, hoặc muốn mua hàng → PHẢI gọi search_products hoặc get_product_detail
+- Khi khách hỏi về chính sách, bảo hành, đổi trả, thanh toán, giao hàng, lắp đặt → gọi searchKnowledge (dùng thêm ngữ cảnh RAG bên dưới nếu có sẵn)
 - KHÔNG BAO GIỜ nói "không thể truy cập cơ sở dữ liệu" — luôn dùng tools để tìm kiếm
 - Nếu tìm không thấy, thử lại với từ khóa khác hoặc gợi ý sản phẩm tương tự
 `
@@ -203,7 +205,7 @@ export async function POST(req: Request) {
       loadSkill: tool({
         description: 'Load a skill to get specialized instructions for a specific task (research, compare, advise, support).',
         inputSchema: z.object({
-          name: z.string().describe('Skill name: phongvu-researcher, phongvu-comparator, phongvu-advisor, phongvu-support'),
+          name: z.string().describe('Skill name: phongvu-researcher, phongvu-comparator, phongvu-advisor'),
         }),
         execute: async ({ name }) => {
           const skill = skills.find(s => s.name.toLowerCase() === name.toLowerCase())
